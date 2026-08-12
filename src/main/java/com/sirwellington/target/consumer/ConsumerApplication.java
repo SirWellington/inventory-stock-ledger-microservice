@@ -18,7 +18,7 @@ public class ConsumerApplication {
     private static final Logger logger = LoggerFactory.getLogger(ConsumerApplication.class);
 
     /** Starts the Kafka consumer and begins polling for events. */
-    public static void main(String[] args) {
+    static void main(String[] args) {
         var dataSource = DatabaseConfig.createDataSource();
         SchemaMigration.run(dataSource);
 
