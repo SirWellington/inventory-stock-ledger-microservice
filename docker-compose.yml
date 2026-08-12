@@ -1,5 +1,3 @@
-version: '3.8'
-
 # Environment Variables
 # DEFINE THESE IN A .env FILE IN THE ROOT OF THE PROJECT
 # ------------------------------------------------------
@@ -11,28 +9,40 @@ version: '3.8'
 services:
   # Local PostgreSQL Database for Stock Ledger & Inventory Data
   postgres:
-    image: postgres:15-alpine
+    image: postgres:17-alpine
     container_name: inventory-postgres
     environment:
       POSTGRES_USER: ${DATABASE_USERNAME}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
-      POSTGRES_DB: stock_ledger_db
+      POSTGRES_DB: inventory_ledger_db
+    mem_limit: 4G
     ports:
-      - "${DATABASE_PORT}:{DATABASE_PORT}"
+      - "${DATABASE_PORT}:${DATABASE_PORT}"
 
   # Local Kafka Broker for Event-Driven Processing (WCA & Inventory Updates)
   kafka:
-    image: bitnami/kafka:latest
+    image: apache/kafka:latest
     container_name: inventory-kafka
     depends_on:
       - postgres
+    mem_limit: 3G
     ports:
       - "${KAFKA_PORT}:${KAFKA_PORT}"
     environment:
       # KRaft mode configuration (No Zookeeper required for local dev)
-      KAFKA_CFG_NODE_ID: 1
-      KAFKA_CFG_PROCESS_ROLES: broker,controller
-      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
-      KAFKA_CFG_LISTENERS: PLAINTEXT://:${KAFKA_PORT},CONTROLLER://:9093
-      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://localhost:{KAFKA_PORT}
-      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:${KAFKA_PORT}
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+
+  # Visual Dashboard for Kafka (Optional but highly recommended)
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: inventory-kafka-ui
+    ports:
+      - "${KAFKA_UI_PORT}:${KAFKA_UI_PORT}"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local-dev
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
