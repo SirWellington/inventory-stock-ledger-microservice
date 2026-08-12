@@ -25,6 +25,7 @@
         <hikaricp.version>6.3.0</hikaricp.version>
         <kafka-clients.version>4.3.0</kafka-clients.version>
         <slf4j.version>2.0.17</slf4j.version>
+        <logback.version>1.5.16</logback.version>
     </properties>
 
     <repositories>
@@ -86,11 +87,17 @@
                 <artifactId>kafka-clients</artifactId>
                 <version>${kafka-clients.version}</version>
             </dependency>
-            <!-- SLF4J Simple Binding -->
+            <!-- SLF4J API -->
             <dependency>
                 <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-simple</artifactId>
+                <artifactId>slf4j-api</artifactId>
                 <version>${slf4j.version}</version>
+            </dependency>
+            <!-- Logback Classic (SLF4J binding) -->
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>${logback.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
