@@ -14,13 +14,14 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!-- Dependency Versions -->
-        <javalin.version>7.2.2</javalin.version>
+        <alchemy.version>3.0-SNAPSHOT</alchemy.version>
+        <javalin.version>7.2.3</javalin.version>
         <jooq.version>3.21.7</jooq.version>
-        <postgresql.version>42.7.7</postgresql.version>
-        <hikaricp.version>6.3.0</hikaricp.version>
-        <kafka-clients.version>4.3.0</kafka-clients.version>
-        <slf4j.version>2.0.17</slf4j.version>
-        <logback.version>1.5.16</logback.version>
+        <postgresql.version>42.7.13</postgresql.version>
+        <hikaricp.version>7.1.0</hikaricp.version>
+        <kafka-clients.version>4.3.1</kafka-clients.version>
+        <slf4j.version>2.0.18</slf4j.version>
+        <logback.version>1.6.2</logback.version>
     </properties>
 
     <repositories>
@@ -88,6 +89,26 @@
             <artifactId>kafka-clients</artifactId>
             <version>${kafka-clients.version}</version>
         </dependency>
+        <!-- Alchemy Test -->
+        <dependency>
+            <groupId>tech.sirwellington.alchemy</groupId>
+            <artifactId>alchemy-test</artifactId>
+            <version>${alchemy.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Alchemy Generator -->
+        <dependency>
+            <groupId>tech.sirwellington.alchemy</groupId>
+            <artifactId>alchemy-generator</artifactId>
+            <version>${alchemy.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Alchemy Arguments -->
+        <dependency>
+            <groupId>tech.sirwellington.alchemy</groupId>
+            <artifactId>alchemy-arguments</artifactId>
+            <version>${alchemy.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -95,7 +116,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.13.0</version>
+                <version>3.15.0</version>
                 <configuration>
                     <release>25</release>
                 </configuration>
@@ -103,11 +124,11 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
-                <version>3.5.0</version>
+                <version>3.6.3</version>
             </plugin>
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
-                <version>3.3.1</version>
+                <version>3.5.0</version>
                 <executions>
                     <execution>
                         <id>copy-schema</id>
