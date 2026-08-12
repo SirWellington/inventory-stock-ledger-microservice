@@ -10,7 +10,7 @@ services:
   # Local PostgreSQL Database for Stock Ledger & Inventory Data
   postgres:
     image: postgres:17-alpine
-    container_name: inventory-postgres
+    container_name: ${DATABASE_NAME}
     environment:
       POSTGRES_USER: ${DATABASE_USERNAME}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
