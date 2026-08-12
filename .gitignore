@@ -1,1 +1,57 @@
+# Environment
 .env
+*.env.local
+
+# Build output
+target/
+build/
+out/
+dist/
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.settings/
+.project
+.classpath
+factorypath
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Packages
+*.jar
+*.war
+*.ear
+*.par
+*.aar
+*.class
+
+# Dependency directories
+node_modules/
+vendor/
+
+# Docker
+.volumes/
+
+# Coverage
+coverage/
+jacoco/
+cobertura/
+
+# Generated sources
+generated-sources/
+target/generated-sources/
+
+# Maven / Gradle wrapper (keep if committed, remove if not)
+# .mvn/wrapper/maven-wrapper.jar
+# gradle/wrapper/gradle-wrapper.jar
