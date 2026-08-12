@@ -2,11 +2,13 @@
 .env
 *.env.local
 
-# Build output
-target/
-build/
-out/
-dist/
+# Build output (Maven target directory at project root only)
+/target/
+/rest-service/target/
+/kafka-consumer/target/
+/build/
+/out/
+/dist/
 
 # IDE
 .idea/
@@ -50,7 +52,7 @@ cobertura/
 
 # Generated sources
 generated-sources/
-target/generated-sources/
+/target/generated-sources/
 
 # Maven / Gradle wrapper (keep if committed, remove if not)
 # .mvn/wrapper/maven-wrapper.jar
