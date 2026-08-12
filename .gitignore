@@ -6,6 +6,7 @@
 /target/
 /rest-service/target/
 /kafka-consumer/target/
+/common/target/
 /build/
 /out/
 /dist/
