@@ -38,10 +38,6 @@ logs/
 *.aar
 *.class
 
-# Dependency directories
-node_modules/
-vendor/
-
 # Docker
 .volumes/
 
@@ -54,6 +50,5 @@ cobertura/
 generated-sources/
 /target/generated-sources/
 
-# Maven / Gradle wrapper (keep if committed, remove if not)
-# .mvn/wrapper/maven-wrapper.jar
-# gradle/wrapper/gradle-wrapper.jar
+# Maven / Gradle wrapper
+.mvn/wrapper/maven-wrapper.jar
