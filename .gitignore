@@ -4,9 +4,6 @@
 
 # Build output (Maven target directory at project root only)
 /target/
-/rest-service/target/
-/kafka-consumer/target/
-/common/target/
 /build/
 /out/
 /dist/
@@ -33,6 +30,9 @@ desktop.ini
 # Logs
 *.log
 logs/
+
+# Maven shade plugin artifact report
+dependency-reduced-pom.xml
 
 # Packages
 *.jar
