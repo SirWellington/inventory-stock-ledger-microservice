@@ -1,0 +1,49 @@
+name: opencode-review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  review:
+    if: ${{ !github.event.pull_request.draft }}
+    runs-on: self-hosted
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: true
+
+      - name: Setup Java 25 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          java-version: "25"
+          distribution: "temurin"
+          cache: maven
+
+      - name: Run opencode
+        uses: anomalyco/opencode/github@v1.18.16
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+        with:
+          model: lmstudio/qwen3.6-27b-uncensored-mtp
+          use_github_token: true
+          prompt: |
+            Review this pull request for a multi-module Maven project (rest-service, kafka-consumer):
+            - Check for code quality issues and Java best practices
+            - Look for potential bugs or vulnerabilities
+            - Focus only on the code changes in this pull request
+            - Suggest improvements for readability, performance, and maintainability
+
+      - name: Cleanup Comments
+        uses: ./.github/actions/cleanup-comments
+        with:
+          token: ${{ github.token }}
+          pr-number: ${{ github.event.pull_request.number }}
+          body-pattern: 'All changes compile|All .* suggestion|Changes Summary|PR Review|Bug fixes implemented|## |No action needed'
