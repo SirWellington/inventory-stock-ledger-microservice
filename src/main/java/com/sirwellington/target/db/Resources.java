@@ -1,4 +1,4 @@
-package com.sirwellington.target.common;
+package com.sirwellington.target.db;
 
 import java.nio.charset.StandardCharsets;
 

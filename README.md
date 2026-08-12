@@ -17,9 +17,30 @@ docker compose up -d
 
 # 2. Build the project and download dependencies
 mvn clean package
+```
 
-# 3. Run the JVM Microservice locally
-mvn exec:java
+### Running via Maven
+
+Pick which service you want to run by passing its fully qualified class name:
+
+```bash
+# Run the REST API (port 7070)
+mvn exec:java -Dexec.mainClass="com.sirwellington.target.rest.RestApplication"
+
+# Run the Kafka consumer (offline worker)
+mvn exec:java -Dexec.mainClass="com.sirwellington.target.consumer.ConsumerApplication"
+```
+
+### Running via JAR
+
+After building, you can also run the fat JAR directly:
+
+```bash
+# REST API
+java -jar target/inventory-stock-ledger-1.0.0-SNAPSHOT.jar com.sirwellington.target.rest.RestApplication
+
+# Kafka consumer
+java -jar target/inventory-stock-ledger-1.0.0-SNAPSHOT.jar com.sirwellington.target.consumer.ConsumerApplication
 ```
 
 ---

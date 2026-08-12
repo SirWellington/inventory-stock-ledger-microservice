@@ -1,4 +1,4 @@
-package com.sirwellington.target.common;
+package com.sirwellington.target.db;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
