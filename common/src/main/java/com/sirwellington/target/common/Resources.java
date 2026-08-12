@@ -1,4 +1,4 @@
-package com.sirwellington.target.consumer;
+package com.sirwellington.target.common;
 
 import java.nio.charset.StandardCharsets;
 

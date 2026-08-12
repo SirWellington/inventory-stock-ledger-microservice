@@ -1,4 +1,4 @@
-package com.sirwellington.target.consumer;
+package com.sirwellington.target.common;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -21,12 +21,12 @@ public final class DatabaseConfig {
         return String.format("jdbc:postgresql://%s:%s/%s", HOST, PORT, NAME);
     }
 
-    /** Creates a HikariCP connection pool from {@link DatabaseConfig}. */
+    /** Creates a HikariCP connection pool for the application. */
     public static HikariDataSource createDataSource() {
         var config = new HikariConfig();
-        config.setJdbcUrl(DatabaseConfig.jdbcUrl());
-        config.setUsername(DatabaseConfig.USERNAME);
-        config.setPassword(DatabaseConfig.PASSWORD);
+        config.setJdbcUrl(jdbcUrl());
+        config.setUsername(USERNAME);
+        config.setPassword(PASSWORD);
         config.setMaximumPoolSize(10);
         config.setMinimumIdle(2);
         return new HikariDataSource(config);
