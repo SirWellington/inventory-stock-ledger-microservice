@@ -21,6 +21,9 @@
 .classpath
 factorypath
 
+# AI
+.opencode/
+
 # OS
 .DS_Store
 Thumbs.db
