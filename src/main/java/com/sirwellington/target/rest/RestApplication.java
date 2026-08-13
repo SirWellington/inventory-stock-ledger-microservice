@@ -15,22 +15,23 @@ import org.slf4j.LoggerFactory;
  */
 public class RestApplication {
 
-    private static final Logger logger = LoggerFactory.getLogger(RestApplication.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RestApplication.class);
+    private static final int PORT = Integer.parseInt(System.getProperty("port", "7070"));
 
-    /** Starts the REST API server on port 7070. */
+    /** Starts the REST API server. Port defaults to 7070; override with -Dport. */
     public static void main() throws SQLException {
         var database = DatabaseConfig.createDataSource();
         SchemaMigration.run(database);
 
         var app = Javalin.create(config -> {
             config.routes.get("/health", ctx -> ctx.json(Map.of("status", "ok")));
-        }).start(7070);
+        }).start(PORT);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            logger.info("Shutting down...");
+            LOG.info("Shutting down...");
             database.close();
         }));
 
-        logger.info("Listening on http://localhost:7070");
+        LOG.info("Listening on http://localhost:" + PORT);
     }
 }

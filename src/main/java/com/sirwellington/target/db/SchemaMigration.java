@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 /** Loads and executes schema.sql to ensure tables exist. */
 public final class SchemaMigration {
 
-    private static final Logger logger = LoggerFactory.getLogger(SchemaMigration.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SchemaMigration.class);
 
     private SchemaMigration() {}
 
@@ -19,7 +19,7 @@ public final class SchemaMigration {
     public static void run(HikariDataSource dataSource) throws SQLException {
         var schemaSql = Resources.load("/schema.sql");
         if (schemaSql == null || schemaSql.isBlank()) {
-            logger.info("No schema.sql found, skipping migration.");
+            LOG.info("No schema.sql found, skipping migration.");
             return;
         }
         try (Connection connection = dataSource.getConnection()) {
@@ -28,9 +28,9 @@ public final class SchemaMigration {
                 statement.execute(schemaSql);
             }
         } catch (SQLException ex) {
-            logger.error("Schema migration failed: {}", ex.getMessage());
+            LOG.error("Schema migration failed: {}", ex.getMessage());
             throw ex;
         }
-        logger.info("Schema migration complete.");
+        LOG.info("Schema migration complete.");
     }
 }

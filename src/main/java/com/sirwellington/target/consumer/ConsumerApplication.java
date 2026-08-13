@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ConsumerApplication {
 
-    private static final Logger logger = LoggerFactory.getLogger(ConsumerApplication.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ConsumerApplication.class);
 
     /** Starts the Kafka consumer and begins polling for events. */
     public static void main() throws SQLException {
@@ -26,10 +26,10 @@ public class ConsumerApplication {
         var consumer = KafkaConfig.createKafkaConsumer();
         consumer.subscribe(Collections.singletonList(KafkaConfig.TOPIC));
 
-        logger.info("Subscribed to topic: {}", KafkaConfig.TOPIC);
+        LOG.info("Subscribed to topic: {}", KafkaConfig.TOPIC);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            logger.info("Shutting down...");
+            LOG.info("Shutting down...");
             consumer.close();
             database.close();
         }));
@@ -42,8 +42,8 @@ public class ConsumerApplication {
         while (!Thread.currentThread().isInterrupted()) {
             var records = consumer.poll(Duration.ofMillis(1000));
             for (var record : records) {
-                logger.debug("Received event: topic={} partition={} offset={} key={} value={}",
-                        record.topic(), record.partition(), record.offset(), record.key(), record.value());
+                LOG.debug("Received event: topic={} partition={} offset={} key={} value={}",
+                          record.topic(), record.partition(), record.offset(), record.key(), record.value());
             }
         }
     }
