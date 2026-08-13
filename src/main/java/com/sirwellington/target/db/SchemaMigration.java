@@ -1,6 +1,7 @@
 package com.sirwellington.target.db;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Statement;
 
 import com.zaxxer.hikari.HikariDataSource;
@@ -15,7 +16,7 @@ public final class SchemaMigration {
     private SchemaMigration() {}
 
     /** Reads schema.sql from the classpath and executes it against the given data source. */
-    public static void run(HikariDataSource dataSource) {
+    public static void run(HikariDataSource dataSource) throws SQLException {
         var schemaSql = Resources.load("/schema.sql");
         if (schemaSql == null || schemaSql.isBlank()) {
             logger.info("No schema.sql found, skipping migration.");
@@ -26,8 +27,9 @@ public final class SchemaMigration {
             try (Statement statement = connection.createStatement()) {
                 statement.execute(schemaSql);
             }
-        } catch (Exception e) {
-            logger.error("Schema migration failed: {}", e.getMessage());
+        } catch (SQLException ex) {
+            logger.error("Schema migration failed: {}", ex.getMessage());
+            throw ex;
         }
         logger.info("Schema migration complete.");
     }

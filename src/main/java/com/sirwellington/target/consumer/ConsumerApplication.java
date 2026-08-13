@@ -1,5 +1,6 @@
 package com.sirwellington.target.consumer;
 
+import java.sql.SQLException;
 import java.time.Duration;
 import java.util.Collections;
 
@@ -18,9 +19,9 @@ public class ConsumerApplication {
     private static final Logger logger = LoggerFactory.getLogger(ConsumerApplication.class);
 
     /** Starts the Kafka consumer and begins polling for events. */
-    static void main(String[] args) {
-        var dataSource = DatabaseConfig.createDataSource();
-        SchemaMigration.run(dataSource);
+    public static void main() throws SQLException {
+        var database = DatabaseConfig.createDataSource();
+        SchemaMigration.run(database);
 
         var consumer = KafkaConfig.createKafkaConsumer();
         consumer.subscribe(Collections.singletonList(KafkaConfig.TOPIC));
@@ -30,7 +31,7 @@ public class ConsumerApplication {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             logger.info("Shutting down...");
             consumer.close();
-            dataSource.close();
+            database.close();
         }));
 
         pollLoop(consumer);

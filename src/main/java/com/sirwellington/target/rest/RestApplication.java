@@ -1,5 +1,6 @@
 package com.sirwellington.target.rest;
 
+import java.sql.SQLException;
 import java.util.Map;
 
 import com.sirwellington.target.db.DatabaseConfig;
@@ -17,13 +18,18 @@ public class RestApplication {
     private static final Logger logger = LoggerFactory.getLogger(RestApplication.class);
 
     /** Starts the REST API server on port 7070. */
-    public static void main(String[] args) {
-        var dataSource = DatabaseConfig.createDataSource();
-        SchemaMigration.run(dataSource);
+    public static void main() throws SQLException {
+        var database = DatabaseConfig.createDataSource();
+        SchemaMigration.run(database);
 
         var app = Javalin.create(config -> {
             config.routes.get("/health", ctx -> ctx.json(Map.of("status", "ok")));
         }).start(7070);
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            logger.info("Shutting down...");
+            database.close();
+        }));
 
         logger.info("Listening on http://localhost:7070");
     }
