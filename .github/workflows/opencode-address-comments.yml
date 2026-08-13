@@ -42,6 +42,11 @@ jobs:
         with:
           persist-credentials: true
 
+      - name: Configure Git user
+        run: |
+          git config --global user.name "opencode-bot"
+          git config --global user.email "opencode@github-actions[bot]"
+
       - name: Run opencode
         uses: anomalyco/opencode/github@v1.18.16
         env:
