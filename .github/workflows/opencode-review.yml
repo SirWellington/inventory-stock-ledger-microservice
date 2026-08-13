@@ -19,6 +19,13 @@ jobs:
         with:
           persist-credentials: true
 
+      - name: Install gh CLI
+        shell: bash
+        run: |
+          if ! command -v gh &>/dev/null; then
+            type sudo >/dev/null 2>&1 && sudo apt-get install -y gh || snap install gh
+          fi
+
       - name: Install opencode (if needed)
         run: |
           if [ ! -f "$HOME/.opencode/bin/opencode" ]; then
