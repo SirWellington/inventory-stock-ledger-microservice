@@ -31,7 +31,7 @@ jobs:
           RUN_ID: ${{ github.run_id }}
         run: |
           ACTIVE=$(gh api repos/${{ github.repository }}/actions/workflows/${{ github.workflow }}.yml/runs \
-            --jq ".workflow_runs[?select(.id != ${RUN_ID})] | [.[] | select(.status == \"in_progress\" or .status == \"queued\")] | length")
+            --jq '[.workflow_runs[] | select(.id != '"${RUN_ID}"') | select(.status == "in_progress" or .status == "queued")] | length')
           if [ "$ACTIVE" -gt 0 ]; then
             echo "::notice::Another run is already processing PR #$PR_NUMBER. Exiting early."
             exit 0
