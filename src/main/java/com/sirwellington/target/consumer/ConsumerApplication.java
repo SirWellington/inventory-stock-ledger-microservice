@@ -1,6 +1,5 @@
 package com.sirwellington.target.consumer;
 
-import java.sql.SQLException;
 import java.time.Duration;
 import java.util.Collections;
 
@@ -19,9 +18,14 @@ public class ConsumerApplication {
     private static final Logger LOG = LoggerFactory.getLogger(ConsumerApplication.class);
 
     /** Starts the Kafka consumer and begins polling for events. */
-    public static void main() throws SQLException {
+    public static void run() {
         var database = DatabaseConfig.createDataSource();
-        SchemaMigration.run(database);
+        try {
+            SchemaMigration.run(database);
+        } catch (SQLException e) {
+            LOG.error("Schema migration failed", e);
+            throw new RuntimeException("Schema migration failed", e);
+        }
 
         var consumer = KafkaConfig.createKafkaConsumer();
         consumer.subscribe(Collections.singletonList(KafkaConfig.TOPIC));

@@ -19,9 +19,14 @@ public class RestApplication {
     private static final int PORT = Integer.parseInt(System.getProperty("port", "7070"));
 
     /** Starts the REST API server. Port defaults to 7070; override with -Dport. */
-    public static void main() throws SQLException {
+    public static void run() {
         var database = DatabaseConfig.createDataSource();
-        SchemaMigration.run(database);
+        try {
+            SchemaMigration.run(database);
+        } catch (SQLException e) {
+            LOG.error("Schema migration failed", e);
+            throw new RuntimeException("Schema migration failed", e);
+        }
 
         var app = Javalin.create(config -> {
             config.routes.get("/health", ctx -> ctx.json(Map.of("status", "ok")));
