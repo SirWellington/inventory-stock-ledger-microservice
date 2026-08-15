@@ -25,13 +25,14 @@ public class RestApplication {
 
         var app = Javalin.create(config -> {
             config.routes.get("/health", ctx -> ctx.json(Map.of("status", "ok")));
-        }).start(PORT);
+        });
+        app.start(PORT);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             LOG.info("Shutting down...");
             database.close();
         }));
 
-        LOG.info("Listening on http://localhost:" + PORT);
+        LOG.info("Listening on http://localhost:{}", PORT);
     }
 }
