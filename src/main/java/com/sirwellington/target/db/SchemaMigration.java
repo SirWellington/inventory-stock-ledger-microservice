@@ -24,9 +24,8 @@ public final class SchemaMigration {
         }
         try (Connection connection = dataSource.getConnection()) {
             connection.setAutoCommit(true);
-            try (Statement statement = connection.createStatement()) {
-                statement.execute(schemaSql);
-            }
+            Statement statement = connection.createStatement();
+            statement.execute(schemaSql);
         } catch (SQLException ex) {
             LOG.error("Schema migration failed: {}", ex.getMessage());
             throw ex;

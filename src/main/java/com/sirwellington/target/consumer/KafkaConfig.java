@@ -2,20 +2,21 @@ package com.sirwellington.target.consumer;
 
 import java.util.Map;
 
+import com.sirwellington.target.EnvConfig;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 
 /**
- * Reads Kafka consumer settings from JVM system properties once at class load time.
+ * Reads Kafka consumer settings from .env file, falling back to JVM system properties.
  */
 public final class KafkaConfig {
 
     private KafkaConfig() {}
 
-    private static final String BOOTSTRAP_SERVERS = System.getProperty("kafka.bootstrap", "localhost:9092");
-    public static final String GROUP_ID           = System.getProperty("kafka.group.id", "inventory-consumer-group");
-    public static final String TOPIC              = System.getProperty("kafka.topic", "inventory-events");
+    private static final String BOOTSTRAP_SERVERS = EnvConfig.get("kafka.bootstrap", "localhost:9092");
+    public static final String GROUP_ID           = EnvConfig.get("kafka.group.id", "inventory-consumer-group");
+    public static final String TOPIC              = EnvConfig.get("kafka.topic", "inventory-events");
 
     /** Creates a KafkaConsumer configured from {@link KafkaConfig}. */
     public static KafkaConsumer<String, String> createKafkaConsumer() {
