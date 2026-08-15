@@ -13,7 +13,7 @@ public class Application {
 
     private static final Logger LOG = LoggerFactory.getLogger(Application.class);
 
-    public static void main(String[] args) {
+    static void main(String[] args) {
         var mode = args.length > 0 ? args[0] : "all";
 
         switch (mode.toLowerCase()) {
@@ -28,27 +28,18 @@ public class Application {
     }
 
     private static void runConsumer() {
-        var thread = new Thread(ConsumerApplication::run, "consumer-thread");
-        thread.setDaemon(false);
-        thread.start();
+        Thread.startVirtualThread(ConsumerApplication::run);
         LOG.info("Running consumer service on dedicated thread.");
     }
 
     private static void runRest() {
-        var thread = new Thread(RestApplication::run, "rest-thread");
-        thread.setDaemon(false);
-        thread.start();
+        Thread.startVirtualThread(RestApplication::run);
         LOG.info("Running REST service on dedicated thread.");
     }
 
     private static void runAll() {
-        var consumerThread = new Thread(ConsumerApplication::run, "consumer-thread");
-        consumerThread.setDaemon(false);
-        consumerThread.start();
-
-        var restThread = new Thread(RestApplication::run, "rest-thread");
-        restThread.setDaemon(false);
-        restThread.start();
+        var consumerThread = Thread.startVirtualThread(ConsumerApplication::run);
+        var restThread = Thread.startVirtualThread(RestApplication::run);
 
         LOG.info("Running both consumer and REST services on separate threads.");
 
