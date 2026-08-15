@@ -21,6 +21,11 @@ public class RestApplication {
     /** Starts the REST API server. Port defaults to 7070; override with -Dport. */
     public static void run() {
         var database = DatabaseConfig.createDataSource();
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            LOG.info("Shutting down...");
+            database.close();
+        }));
+
         try {
             SchemaMigration.run(database);
         } catch (SQLException e) {
@@ -32,12 +37,6 @@ public class RestApplication {
             config.routes.get("/health", ctx -> ctx.json(Map.of("status", "ok")));
         });
         app.start(PORT);
-
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            LOG.info("Shutting down...");
-            database.close();
-        }));
-
         LOG.info("Listening on http://localhost:{}", PORT);
     }
 }
