@@ -4,6 +4,7 @@
 # DATABASE_USERNAME=your_database_username
 # DATABASE_PASSWORD=your_database_password
 # DATABASE_PORT=default_postgres_port (e.g., 5432)
+# KAFKA_HOST=localhost(when service runs outside docker) OR inventory-kafka(when service runs inside docker).
 # KAFKA_PORT=default_kafka_port (e.g., 9092)
 
 services:
