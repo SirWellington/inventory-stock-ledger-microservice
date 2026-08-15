@@ -13,7 +13,7 @@ public class Application {
 
     private static final Logger LOG = LoggerFactory.getLogger(Application.class);
 
-    static void main(String[] args) {
+    public static void main(String[] args) {
         var mode = args.length > 0 ? args[0] : "all";
 
         switch (mode.toLowerCase()) {
