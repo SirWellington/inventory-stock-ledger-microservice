@@ -21,26 +21,32 @@ mvn clean package
 
 ### Running via Maven
 
-Pick which service you want to run by passing its fully qualified class name:
+The project has a single entry point (`com.sirwellington.target.Application`) that accepts a mode argument: `rest`, `consumer`, or `all`.
 
 ```bash
-# Run the REST API (port 7070)
-mvn exec:java -Dexec.mainClass="com.sirwellington.target.rest.RestApplication"
+# Run only the REST API (port 7070)
+mvn exec:java -Dexec.mainClass="com.sirwellington.target.Application" -Dexec.args="rest"
 
-# Run the Kafka consumer (offline worker)
-mvn exec:java -Dexec.mainClass="com.sirwellington.target.consumer.ConsumerApplication"
+# Run only the Kafka consumer (offline worker)
+mvn exec:java -Dexec.mainClass="com.sirwellington.target.Application" -Dexec.args="consumer"
+
+# Run both services on separate virtual threads
+mvn exec:java -Dexec.mainClass="com.sirwellington.target.Application" -Dexec.args="all"
 ```
 
 ### Running via JAR
 
-After building, you can also run the fat JAR directly:
+After building, you can also run the fat JAR directly with the same mode arguments:
 
 ```bash
-# REST API
-java -jar target/inventory-stock-ledger-1.0.0-SNAPSHOT.jar com.sirwellington.target.rest.RestApplication
+# REST API only
+java -jar target/inventory-stock-ledger-1.0.0-SNAPSHOT.jar rest
 
-# Kafka consumer
-java -jar target/inventory-stock-ledger-1.0.0-SNAPSHOT.jar com.sirwellington.target.consumer.ConsumerApplication
+# Kafka consumer only
+java -jar target/inventory-stock-ledger-1.0.0-SNAPSHOT.jar consumer
+
+# Both services (default if no argument is given)
+java -jar target/inventory-stock-ledger-1.0.0-SNAPSHOT.jar all
 ```
 
 ---
