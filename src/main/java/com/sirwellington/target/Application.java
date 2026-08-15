@@ -28,13 +28,25 @@ public class Application {
     }
 
     private static void runConsumer() {
-        Thread.startVirtualThread(ConsumerApplication::run);
+        var thread = Thread.startVirtualThread(ConsumerApplication::run);
         LOG.info("Running consumer service on dedicated thread.");
+        try {
+            thread.join();
+        } catch (InterruptedException ex) {
+            LOG.warn("Consumer interrupted", ex);
+            Thread.currentThread().interrupt();
+        }
     }
 
     private static void runRest() {
-        Thread.startVirtualThread(RestApplication::run);
+        var thread = Thread.startVirtualThread(RestApplication::run);
         LOG.info("Running REST service on dedicated thread.");
+        try {
+            thread.join();
+        } catch (InterruptedException ex) {
+            LOG.warn("REST server interrupted", ex);
+            Thread.currentThread().interrupt();
+        }
     }
 
     private static void runAll() {
@@ -45,7 +57,9 @@ public class Application {
 
         try {
             consumerThread.join();
-        } catch (InterruptedException e) {
+            restThread.join();
+        } catch (InterruptedException ex) {
+            LOG.warn("Application interrupted", ex);
             Thread.currentThread().interrupt();
         }
     }
