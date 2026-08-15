@@ -1,5 +1,6 @@
 package com.sirwellington.target.consumer;
 
+import java.sql.SQLException;
 import java.time.Duration;
 import java.util.Collections;
 

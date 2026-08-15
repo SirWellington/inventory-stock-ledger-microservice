@@ -58,7 +58,7 @@ jobs:
           MODEL: lmstudio/qwen3.6-27b-uncensored-mtp
           USE_GITHUB_TOKEN: "true"
           PROMPT: |
-            Before pushing any changes, fetch and rebase from origin to avoid diverged history conflicts.
+            Before pushing any changes, fetch and rebase from origin just before pushing to avoid diverged history conflicts.
             Read this pull request comment and implement the suggestion in the codebase.
             Test and verify changes to make sure they compile and work as expected.
             If no changes are currently pending, do not post a new comment.

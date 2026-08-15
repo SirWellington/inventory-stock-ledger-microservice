@@ -20,8 +20,10 @@ public class Application {
             case "consumer" -> runConsumer();
             case "rest" -> runRest();
             case "all" -> runAll();
-            default -> LOG.warn("Unknown mode '{}', running both services.", mode);
-                     runAll();
+            default -> {
+                LOG.warn("Unknown mode '{}', running both services.", mode);
+                runAll();
+            }
         }
     }
 
