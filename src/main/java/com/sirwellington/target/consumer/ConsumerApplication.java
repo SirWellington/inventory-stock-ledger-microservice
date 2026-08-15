@@ -46,8 +46,14 @@ public class ConsumerApplication {
         while (!Thread.currentThread().isInterrupted()) {
             var records = consumer.poll(Duration.ofMillis(5000));
             for (var record : records) {
-                LOG.debug("Received event: topic={} partition={} offset={} key={} value={}",
-                          record.topic(), record.partition(), record.offset(), record.key(), record.value());
+                LOG.debug(
+                    "Received event: topic={} partition={} offset={} key={} value={}",
+                    record.topic(),
+                    record.partition(),
+                    record.offset(),
+                    record.key(),
+                    record.value()
+                );
             }
         }
     }
