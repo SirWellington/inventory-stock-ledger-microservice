@@ -14,9 +14,9 @@ public final class KafkaConfig {
 
     private KafkaConfig() {}
 
-    private static final String BOOTSTRAP_SERVERS = EnvConfig.get("kafka.bootstrap", "localhost:9092");
-    public static final String GROUP_ID           = EnvConfig.get("kafka.group.id", "inventory-consumer-group");
-    public static final String TOPIC              = EnvConfig.get("kafka.topic", "inventory-events");
+    public static final String BOOTSTRAP_SERVERS = EnvConfig.get("KAFKA_BOOTSTRAP", "localhost:9092");
+    public static final String GROUP_ID           = EnvConfig.get("KAFKA_GROUP_ID", "inventory-consumer-group");
+    public static final String TOPIC              = EnvConfig.get("KAFKA_TOPIC", "inventory-events");
 
     /** Creates a KafkaConsumer configured from {@link KafkaConfig}. */
     public static KafkaConsumer<String, String> createKafkaConsumer() {

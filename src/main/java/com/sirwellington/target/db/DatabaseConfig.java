@@ -11,11 +11,11 @@ public final class DatabaseConfig {
 
     private DatabaseConfig() {}
 
-    private static final String USERNAME = EnvConfig.get("database.username");
-    private static final String PASSWORD = EnvConfig.get("database.password");
-    private static final String PORT     = EnvConfig.get("database.port", "5432");
-    private static final String HOST     = EnvConfig.get("database.host", "localhost");
-    private static final String NAME     = EnvConfig.get("database.name", "inventory_ledger_db");
+    private static final String USERNAME = EnvConfig.get("DATABASE_USERNAME");
+    private static final String PASSWORD = EnvConfig.get("DATABASE_PASSWORD");
+    private static final String PORT     = EnvConfig.get("DATABASE_PORT", "5432");
+    private static final String HOST     = EnvConfig.get("DATABASE_HOST", "localhost");
+    private static final String NAME     = EnvConfig.get("DATABASE_NAME", "inventory_ledger_db");
 
     /** Builds and returns the full JDBC URL from host, port, and name. */
     public static String jdbcUrl() {
