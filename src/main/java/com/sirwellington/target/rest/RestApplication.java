@@ -1,0 +1,42 @@
+package com.sirwellington.target.rest;
+
+import java.sql.SQLException;
+import java.util.Map;
+
+import com.sirwellington.target.db.DatabaseConfig;
+import com.sirwellington.target.db.SchemaMigration;
+import io.javalin.Javalin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * REST service entry point. Bootstraps Javalin, initializes the database pool,
+ * and runs schema migration on startup.
+ */
+public class RestApplication {
+
+    private static final Logger LOG = LoggerFactory.getLogger(RestApplication.class);
+    private static final int PORT = Integer.parseInt(System.getProperty("port", "7070"));
+
+    /** Starts the REST API server. Port defaults to 7070; override with -Dport. */
+    public static void run() {
+        var database = DatabaseConfig.createDataSource();
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            LOG.info("Shutting down...");
+            database.close();
+        }));
+
+        try {
+            SchemaMigration.run(database);
+        } catch (SQLException e) {
+            LOG.error("Schema migration failed", e);
+            throw new RuntimeException("Schema migration failed", e);
+        }
+
+        var app = Javalin.create(config -> {
+            config.routes.get("/health", ctx -> ctx.json(Map.of("status", "ok")));
+        });
+        app.start(PORT);
+        LOG.info("Listening on http://localhost:{}", PORT);
+    }
+}
