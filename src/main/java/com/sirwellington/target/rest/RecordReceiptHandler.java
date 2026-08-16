@@ -1,0 +1,90 @@
+package com.sirwellington.target.rest;
+
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import javax.inject.Inject;
+
+import com.sirwellington.target.db.InventoryRepository;
+import com.sirwellington.target.model.TransactionType;
+import com.sirwellington.target.producer.EventPublisher;
+import io.javalin.http.Context;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import tech.sirwellington.alchemy.annotations.arguments.Required;
+import tech.sirwellington.alchemy.arguments.assertions.NumberAssertions;
+
+import static tech.sirwellington.alchemy.arguments.Arguments.checkThat;
+import static tech.sirwellington.alchemy.arguments.assertions.StringAssertions.nonEmptyString;
+
+public class RecordReceiptHandler {
+
+    private static final Logger LOG = LoggerFactory.getLogger(RecordReceiptHandler.class);
+
+    public record RecordReceiptRequest(
+        String skuId,
+        int quantity,
+        BigDecimal unitCost
+    ) {}
+
+    public record RecordReceiptResponse(
+        long transactionId,
+        OffsetDateTime transactionTimestamp,
+        String skuId,
+        String transactionType,
+        int quantityChange,
+        BigDecimal unitCost,
+        BigDecimal totalAmountImpact
+    ) {}
+
+    private final InventoryRepository repository;
+    private final EventPublisher publisher;
+
+    @Inject
+    public RecordReceiptHandler(
+        @Required InventoryRepository repository,
+        @Required EventPublisher publisher
+    ) {
+        this.repository = repository;
+        this.publisher = publisher;
+    }
+
+    public void handle(@Required Context ctx) throws Exception {
+        var request = ctx.bodyAsClass(RecordReceiptRequest.class);
+        checkThat(request.skuId)
+            .usingMessage("skuId is required")
+            .isA(nonEmptyString());
+        checkThat(request.quantity)
+            .usingMessage("quantity must be greater than 0")
+            .isA(NumberAssertions.greaterThan(0));
+
+        var response = repository.insertTransaction(new InventoryRepository.InsertTransactionRequest(
+            TransactionType.RECEIPT,
+            request.skuId(),
+            request.quantity(),
+            request.unitCost()
+        ));
+
+        var payloadJson = String.format(
+            "{\"transactionId\":%d,\"type\":\"%s\",\"skuId\":\"%s\",\"quantityChange\":%d,\"unitCost\":\"%s\"}",
+            response.transactionId(),
+            TransactionType.RECEIPT.name(),
+            request.skuId(),
+            request.quantity(),
+            request.unitCost().toPlainString()
+        );
+
+        publisher.publish(request.skuId(), payloadJson);
+
+        LOG.info("Receipt recorded: transactionId={}, sku={}", response.transactionId(), request.skuId());
+
+        ctx.status(201).json(new RecordReceiptResponse(
+            response.transactionId(),
+            response.transactionTimestamp(),
+            request.skuId(),
+            TransactionType.RECEIPT.name(),
+            request.quantity(),
+            request.unitCost(),
+            BigDecimal.valueOf(request.quantity()).multiply(request.unitCost())
+        ));
+    }
+}
