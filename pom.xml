@@ -22,7 +22,9 @@
         <kafka-clients.version>4.3.1</kafka-clients.version>
         <slf4j.version>2.0.18</slf4j.version>
         <logback.version>1.6.2</logback.version>
-        <dotenv-java.version>3.0.0</dotenv-java.version>
+        <dotenv-java.version>3.2.0</dotenv-java.version>
+        <guice.version>7.0.0</guice.version>
+        <jackson.version>2.18.4</jackson.version>
     </properties>
 
     <repositories>
@@ -115,6 +117,24 @@
             <groupId>io.github.cdimascio</groupId>
             <artifactId>dotenv-java</artifactId>
             <version>${dotenv-java.version}</version>
+        </dependency>
+        <!-- Google Guice Dependency Injection -->
+        <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+            <version>${guice.version}</version>
+        </dependency>
+        <!-- JSR-330 Dependency Injection API (required by Guice) -->
+        <dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+            <version>1</version>
+        </dependency>
+        <!-- Jackson JSON Mapper -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
         </dependency>
     </dependencies>
 
