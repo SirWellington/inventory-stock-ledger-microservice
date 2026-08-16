@@ -5,7 +5,7 @@ import java.sql.SQLException;
 import com.google.inject.Guice;
 import com.sirwellington.target.db.DatabaseConfig;
 import com.sirwellington.target.db.SchemaMigration;
-import com.sirwellington.target.di.DiModule;
+import com.sirwellington.target.TargetModule;
 import io.javalin.Javalin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +33,7 @@ public class RestApplication {
             throw new RuntimeException("Schema migration failed", e);
         }
 
-        var injector = Guice.createInjector(new DiModule(database));
+        var injector = Guice.createInjector(new TargetModule(database));
 
         var healthHandler = injector.getInstance(GetHealthHandler.class);
         var recordReceiptHandler = injector.getInstance(RecordReceiptHandler.class);
