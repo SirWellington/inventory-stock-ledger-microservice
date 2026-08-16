@@ -47,6 +47,7 @@ public class RestApplication {
             config.routes.put("/api/v1/inventory/{skuId}/cost-adjustment", adjustCostHandler::handle);
             config.routes.get("/api/v1/inventory/{skuId}/current-value", getCurrentValueHandler::handle);
             config.routes.get("/api/v1/ledger/history", getLedgerHistoryHandler::handle);
+            config.concurrency.useVirtualThreads = true;
         });
 
         app.start(PORT);
