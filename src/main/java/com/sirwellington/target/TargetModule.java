@@ -54,8 +54,8 @@ public class TargetModule extends AbstractModule {
 
     @Provides
     @Singleton
-    EventPublisher provideEventPublisher(KafkaProducer<String, String> producer) {
-        return new EventPublisher(producer);
+    EventPublisher provideEventPublisher(KafkaProducer<String, String> producer, ObjectMapper objectMapper) {
+        return new EventPublisher(producer, objectMapper);
     }
 
     @Provides

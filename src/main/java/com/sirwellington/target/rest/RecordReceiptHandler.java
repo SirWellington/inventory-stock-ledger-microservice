@@ -5,6 +5,7 @@ import java.time.OffsetDateTime;
 import javax.inject.Inject;
 
 import com.sirwellington.target.db.InventoryRepository;
+import com.sirwellington.target.model.EventPayload;
 import com.sirwellington.target.model.TransactionType;
 import com.sirwellington.target.producer.EventPublisher;
 import io.javalin.http.Context;
@@ -64,16 +65,15 @@ public class RecordReceiptHandler {
             request.unitCost()
         ));
 
-        var payloadJson = String.format(
-            "{\"transactionId\":%d,\"type\":\"%s\",\"skuId\":\"%s\",\"quantityChange\":%d,\"unitCost\":\"%s\"}",
+        var eventPayload = new EventPayload(
             response.transactionId(),
             TransactionType.RECEIPT.name(),
             request.skuId(),
             request.quantity(),
-            request.unitCost().toPlainString()
+            request.unitCost()
         );
 
-        publisher.publish(request.skuId(), payloadJson);
+        publisher.publish(eventPayload);
 
         LOG.info("Receipt recorded: transactionId={}, sku={}", response.transactionId(), request.skuId());
 
