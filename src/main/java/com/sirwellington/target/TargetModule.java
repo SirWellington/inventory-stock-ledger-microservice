@@ -61,34 +61,4 @@ public class TargetModule extends AbstractModule {
         return new EventPublisher(producer, objectMapper);
     }
 
-    @Provides
-    @Singleton
-    GetHealthHandler provideHealthHandler() {
-        return new GetHealthHandler();
-    }
-
-    @Provides
-    @Singleton
-    RecordReceiptHandler provideReceiptHandler(InventoryRepository repository, EventPublisher publisher) {
-        return new RecordReceiptHandler(repository, publisher);
-    }
-
-    @Provides
-    @Singleton
-    AdjustCostHandler provideCostAdjustmentHandler(InventoryRepository repository, EventPublisher publisher) {
-        return new AdjustCostHandler(repository, publisher);
-    }
-
-    @Provides
-    @Singleton
-    GetCurrentValueHandler provideCurrentValueHandler(InventoryRepository repository) {
-        return new GetCurrentValueHandler(repository);
-    }
-
-    @Provides
-    @Singleton
-    GetLedgerHistoryHandler provideLedgerHistoryHandler(InventoryRepository repository) {
-        return new GetLedgerHistoryHandler(repository);
-    }
-
 }

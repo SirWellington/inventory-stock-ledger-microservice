@@ -5,6 +5,7 @@ import java.time.OffsetDateTime;
 import java.util.Objects;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import com.sirwellington.target.db.InventoryRepository;
 import com.sirwellington.target.model.EventPayload;
@@ -15,25 +16,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tech.sirwellington.alchemy.annotations.arguments.Required;
 
+@Singleton
 public class AdjustCostHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(AdjustCostHandler.class);
-
-    public record CostAdjustmentRequest(
-        int quantityChange,
-        BigDecimal unitCost,
-        String reasonCode
-    ) {}
-
-    public record CostAdjustmentResponse(
-        long transactionId,
-        OffsetDateTime transactionTimestamp,
-        String skuId,
-        String transactionType,
-        int quantityChange,
-        BigDecimal unitCost,
-        BigDecimal totalAmountImpact
-    ) {}
 
     private final InventoryRepository repository;
     private final EventPublisher publisher;
@@ -85,4 +71,21 @@ public class AdjustCostHandler {
             BigDecimal.valueOf(request.quantityChange()).multiply(request.unitCost())
         ));
     }
+
+    public record CostAdjustmentRequest(
+        int quantityChange,
+        BigDecimal unitCost,
+        String reasonCode
+    ) {}
+
+    public record CostAdjustmentResponse(
+        long transactionId,
+        OffsetDateTime transactionTimestamp,
+        String skuId,
+        String transactionType,
+        int quantityChange,
+        BigDecimal unitCost,
+        BigDecimal totalAmountImpact
+    ) {}
+
 }
