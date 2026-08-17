@@ -20,23 +20,6 @@ import static tech.sirwellington.alchemy.arguments.assertions.StringAssertions.n
 public class RecordReceiptHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(RecordReceiptHandler.class);
-
-    public record RecordReceiptRequest(
-        String skuId,
-        int quantity,
-        BigDecimal unitCost
-    ) {}
-
-    public record RecordReceiptResponse(
-        long transactionId,
-        OffsetDateTime transactionTimestamp,
-        String skuId,
-        String transactionType,
-        int quantityChange,
-        BigDecimal unitCost,
-        BigDecimal totalAmountImpact
-    ) {}
-
     private final InventoryRepository repository;
     private final EventPublisher publisher;
 
@@ -87,4 +70,21 @@ public class RecordReceiptHandler {
             BigDecimal.valueOf(request.quantity()).multiply(request.unitCost())
         ));
     }
+
+    public record RecordReceiptRequest(
+        String skuId,
+        int quantity,
+        BigDecimal unitCost
+    ) {}
+
+    public record RecordReceiptResponse(
+        long transactionId,
+        OffsetDateTime transactionTimestamp,
+        String skuId,
+        String transactionType,
+        int quantityChange,
+        BigDecimal unitCost,
+        BigDecimal totalAmountImpact
+    ) {}
+
 }
