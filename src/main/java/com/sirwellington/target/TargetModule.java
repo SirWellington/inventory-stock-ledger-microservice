@@ -6,6 +6,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.sql.DataSource;
 
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.sirwellington.target.db.InventoryRepository;
@@ -31,7 +32,9 @@ public class TargetModule extends AbstractModule {
     @Provides
     @Singleton
     ObjectMapper provideJsonMapper() {
-        return new ObjectMapper();
+        return new ObjectMapper()
+            .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+            .enable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     }
 
     @Provides
