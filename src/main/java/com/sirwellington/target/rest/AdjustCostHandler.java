@@ -4,9 +4,8 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.sirwellington.target.db.InventoryRepository;
 import com.sirwellington.target.model.EventPayload;
 import com.sirwellington.target.model.TransactionType;

@@ -3,9 +3,8 @@ package com.sirwellington.target.rest;
 import java.util.Map;
 import java.util.Objects;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.sirwellington.target.db.InventoryRepository;
 import io.javalin.http.Context;
 import tech.sirwellington.alchemy.annotations.arguments.Required;

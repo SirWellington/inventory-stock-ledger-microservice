@@ -2,8 +2,10 @@ package com.sirwellington.target.rest;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
-import javax.inject.Inject;
+import java.util.Objects;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.sirwellington.target.db.InventoryRepository;
 import com.sirwellington.target.model.EventPayload;
 import com.sirwellington.target.model.TransactionType;
@@ -17,6 +19,7 @@ import tech.sirwellington.alchemy.arguments.assertions.NumberAssertions;
 import static tech.sirwellington.alchemy.arguments.Arguments.checkThat;
 import static tech.sirwellington.alchemy.arguments.assertions.StringAssertions.nonEmptyString;
 
+@Singleton
 public class RecordReceiptHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(RecordReceiptHandler.class);
@@ -28,6 +31,8 @@ public class RecordReceiptHandler {
         @Required InventoryRepository repository,
         @Required EventPublisher publisher
     ) {
+        Objects.requireNonNull(repository);
+        Objects.requireNonNull(publisher);
         this.repository = repository;
         this.publisher = publisher;
     }

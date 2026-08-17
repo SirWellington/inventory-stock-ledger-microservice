@@ -3,14 +3,16 @@ package com.sirwellington.target.rest;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
-import javax.inject.Singleton;
-
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.sirwellington.target.db.InventoryRepository;
 import com.sirwellington.target.rest.GetLedgerHistoryHandler.GetLedgerHistoryResponse.LedgerEntry;
 import io.javalin.http.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tech.sirwellington.alchemy.annotations.arguments.Required;
 
 @Singleton
 public class GetLedgerHistoryHandler {
@@ -19,7 +21,9 @@ public class GetLedgerHistoryHandler {
 
     private final InventoryRepository repository;
 
-    public GetLedgerHistoryHandler(InventoryRepository repository) {
+    @Inject
+    public GetLedgerHistoryHandler(@Required InventoryRepository repository) {
+        Objects.requireNonNull(repository);
         this.repository = repository;
     }
 
