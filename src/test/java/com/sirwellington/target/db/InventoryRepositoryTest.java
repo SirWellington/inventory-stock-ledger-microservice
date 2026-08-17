@@ -1,0 +1,274 @@
+package com.sirwellington.target.db;
+
+import java.math.BigDecimal;
+import java.sql.Connection;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import com.sirwellington.target.model.TransactionType;
+import io.zonky.test.db.postgres.embedded.EmbeddedPostgres;
+import tech.sirwellington.alchemy.generator.DateGenerators;
+import tech.sirwellington.alchemy.generator.TimeGenerators;
+
+import javax.sql.DataSource;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static tech.sirwellington.alchemy.generator.TimeGenerators.futureInstants;
+
+class InventoryRepositoryTest {
+
+    private static EmbeddedPostgres embeddedPg;
+    private static DataSource dataSource;
+
+    private Connection connection;
+    private InventoryRepository repository;
+
+    @BeforeAll
+    static void startDatabase() throws Exception {
+        embeddedPg = EmbeddedPostgres.builder().start();
+        dataSource = embeddedPg.getPostgresDatabase();
+        SchemaMigration.run(dataSource);
+    }
+
+    @BeforeEach
+    void setUp() throws Exception {
+        connection = dataSource.getConnection();
+        TestDbUtils.truncateAll(connection);
+        repository = new InventoryRepository(connection);
+    }
+
+    @AfterEach
+    void tearDown() throws Exception {
+        if (connection != null) {
+            connection.close();
+        }
+    }
+
+    @AfterAll
+    static void stopDatabase() throws Exception {
+        if (embeddedPg != null) {
+            embeddedPg.close();
+        }
+    }
+
+    @Test
+    void insertTransactionReturnsGeneratedIdAndTimestamp() {
+        var request = new InventoryRepository.InsertTransactionRequest(
+            TransactionType.RECEIPT,
+            "SKU-001",
+            100,
+            BigDecimal.valueOf(5.50)
+        );
+
+        var response = repository.insertTransaction(request);
+
+        assertThat(response.transactionId()).isGreaterThan(0);
+        assertThat(response.transactionTimestamp()).isNotNull();
+    }
+
+    @Test
+    void insertMultipleTransactionsReturnsUniqueIds() {
+        var id1 = repository.insertTransaction(new InventoryRepository.InsertTransactionRequest(
+            TransactionType.RECEIPT,
+            "SKU-A",
+            50,
+            BigDecimal.valueOf(10.00)
+        )).transactionId();
+
+        var id2 = repository.insertTransaction(new InventoryRepository.InsertTransactionRequest(
+            TransactionType.SALE,
+            "SKU-B",
+            -10,
+            BigDecimal.valueOf(8.00)
+        )).transactionId();
+
+        assertThat(id1).isNotEqualTo(id2);
+    }
+
+    @Test
+    void insertReceiptTransaction() {
+        var response = repository.insertTransaction(new InventoryRepository.InsertTransactionRequest(
+            TransactionType.RECEIPT,
+            "SKU-REC",
+            200,
+            BigDecimal.valueOf(3.75)
+        ));
+
+        assertThat(response.transactionId()).isGreaterThan(0);
+        assertThat(response.transactionTimestamp()).isNotNull();
+    }
+
+    @Test
+    void insertAdjustmentTransaction() {
+        var response = repository.insertTransaction(new InventoryRepository.InsertTransactionRequest(
+            TransactionType.ADJUSTMENT,
+            "SKU-ADJ",
+            -25,
+            BigDecimal.valueOf(12.00)
+        ));
+
+        assertThat(response.transactionId()).isGreaterThan(0);
+    }
+
+    @Test
+    void insertSaleTransaction() {
+        var response = repository.insertTransaction(new InventoryRepository.InsertTransactionRequest(
+            TransactionType.SALE,
+            "SKU-SALE",
+            -5,
+            BigDecimal.valueOf(25.00)
+        ));
+
+        assertThat(response.transactionId()).isGreaterThan(0);
+    }
+
+    @Test
+    void getInventoryValueReturnsValueForExistingSku() throws Exception {
+        try (var stmt = connection.createStatement()) {
+            stmt.execute(
+                "INSERT INTO sku_inventory_snapshots (sku_id, current_quantity, total_current_value) " +
+                "VALUES ('SKU-EXIST', 500, 2500.00)"
+            );
+        }
+
+        var result = repository.getInventoryValue(new InventoryRepository.GetInventoryValueRequest("SKU-EXIST"));
+
+        assertThat(result).isPresent();
+        assertThat(result.get().currentQuantity()).isEqualTo(500);
+        assertThat(result.get().totalCurrentValue()).isEqualByComparingTo(BigDecimal.valueOf(2500.00));
+    }
+
+    @Test
+    void getInventoryValueReturnsEmptyForMissingSku() {
+        var result = repository.getInventoryValue(
+            new InventoryRepository.GetInventoryValueRequest("SKU-MISSING")
+        );
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void getLedgerHistoryReturnsTransactionsInRange() throws Exception {
+        var now = OffsetDateTime.now();
+        try (var stmt = connection.createStatement()) {
+            stmt.execute(
+                "INSERT INTO inventory_transactions (sku_id, transaction_type, quantity_change, unit_cost, transaction_timestamp) VALUES " +
+                "('SKU-HIST', 'RECEIPT', 100, 5.00, '" + now + "'), " +
+                "('SKU-HIST', 'SALE', -20, 5.00, '" + now.plusMinutes(5) + "')"
+            );
+        }
+
+        var result = repository.getLedgerHistory(new InventoryRepository.GetLedgerHistoryQuery(
+            now.minusDays(1), now.plusDays(1)
+        ));
+
+        assertThat(result.transactions()).hasSize(2);
+    }
+
+    @Test
+    void getLedgerHistoryReturnsEmptyWhenNoTransactionsInRange() {
+        var future = OffsetDateTime.now().plusMonths(1);
+        var result = repository.getLedgerHistory(new InventoryRepository.GetLedgerHistoryQuery(
+            future, future.plusDays(1)
+        ));
+
+        assertThat(result.transactions()).isEmpty();
+    }
+
+    @Test
+    void getLedgerHistoryOrdersByTimestampAscending() throws Exception {
+        try (var stmt = connection.createStatement()) {
+            stmt.execute(
+                "INSERT INTO inventory_transactions (transaction_timestamp, sku_id, transaction_type, quantity_change, unit_cost) VALUES " +
+                "(TIMESTAMP '2026-03-15 10:00:00', 'SKU-ORD', 'RECEIPT', 10, 5.00), " +
+                "(TIMESTAMP '2026-03-10 08:00:00', 'SKU-ORD', 'RECEIPT', 20, 5.00)"
+            );
+        }
+
+        var result = repository.getLedgerHistory(new InventoryRepository.GetLedgerHistoryQuery(
+            OffsetDateTime.parse("2026-03-01T00:00:00Z"),
+            OffsetDateTime.parse("2026-03-31T23:59:59Z")
+        ));
+
+        assertThat(result.transactions()).hasSize(2);
+    }
+
+    @Test
+    void getLedgerHistoryFiltersByDateRange() throws Exception {
+        try (var stmt = connection.createStatement()) {
+            stmt.execute(
+                "INSERT INTO inventory_transactions (transaction_timestamp, sku_id, transaction_type, quantity_change, unit_cost) VALUES " +
+                "(TIMESTAMP '2026-01-15 10:00:00', 'SKU-FIL', 'RECEIPT', 10, 5.00), " +
+                "(TIMESTAMP '2026-06-15 10:00:00', 'SKU-FIL', 'SALE', -5, 5.00)"
+            );
+        }
+
+        var result = repository.getLedgerHistory(new InventoryRepository.GetLedgerHistoryQuery(
+            OffsetDateTime.parse("2026-04-01T00:00:00Z"),
+            OffsetDateTime.parse("2026-09-30T23:59:59Z")
+        ));
+
+        assertThat(result.transactions()).hasSize(1);
+    }
+
+    @Test
+    void transactionRecordContainsCorrectFields() throws Exception {
+        var response = repository.insertTransaction(new InventoryRepository.InsertTransactionRequest(
+            TransactionType.RECEIPT, "SKU-FIELD", 30, BigDecimal.valueOf(7.25)
+        ));
+
+        try (var stmt = connection.createStatement()) {
+            stmt.execute(
+                "INSERT INTO sku_inventory_snapshots (sku_id, current_quantity, total_current_value) VALUES ('SKU-FIELD', 30, 217.50)"
+            );
+        }
+
+        var historyQuery = repository.getLedgerHistory(new InventoryRepository.GetLedgerHistoryQuery(
+            response.transactionTimestamp().minusHours(1),
+            response.transactionTimestamp().plusHours(1)
+        ));
+
+        assertThat(historyQuery.transactions()).hasSize(1);
+        var record = historyQuery.transactions().get(0);
+        assertThat(record.skuId()).isEqualTo("SKU-FIELD");
+    }
+
+    @Test
+    void insertTransactionWithDecimalUnitCost() {
+        var response = repository.insertTransaction(new InventoryRepository.InsertTransactionRequest(
+            TransactionType.RECEIPT, "SKU-DEC", 15, new BigDecimal("42.8765")
+        ));
+
+        assertThat(response.transactionId()).isGreaterThan(0);
+    }
+
+    @Test
+    void getInventoryValueWithDecimalPrecision() throws Exception {
+        try (var stmt = connection.createStatement()) {
+            stmt.execute(
+                "INSERT INTO sku_inventory_snapshots (sku_id, current_quantity, total_current_value) VALUES ('SKU-PREC', 1234, 56789.01)"
+            );
+        }
+
+        var result = repository.getInventoryValue(new InventoryRepository.GetInventoryValueRequest("SKU-PREC"));
+
+        assertThat(result).isPresent();
+    }
+
+    @Test
+    void emptyLedgerHistoryResponseIsNotNull() {
+        var future = futureInstants().mapping(i -> i.atOffset(ZoneOffset.UTC)).get();
+        var result = repository.getLedgerHistory(new InventoryRepository.GetLedgerHistoryQuery(future, future.plusDays(1)));
+
+        assertThat(result).isNotNull();
+        assertThat(result.transactions()).isNotNull();
+    }
+}

@@ -74,7 +74,7 @@ public class AdjustCostHandler {
     public record CostAdjustmentRequest(
         int quantityChange,
         BigDecimal unitCost,
-        String reasonCode
+        String reasonCode //TODO: Reason Code is never stored
     ) {}
 
     public record CostAdjustmentResponse(

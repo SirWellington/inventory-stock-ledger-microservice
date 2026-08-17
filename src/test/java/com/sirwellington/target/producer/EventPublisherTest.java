@@ -1,0 +1,129 @@
+package com.sirwellington.target.producer;
+
+import java.math.BigDecimal;
+import java.util.concurrent.CompletableFuture;
+
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.TopicPartition;
+import org.junit.jupiter.api.Test;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sirwellington.target.model.EventPayload;
+
+import org.mockito.Mock;
+import tech.sirwellington.alchemy.test.AlchemyTest;
+import tech.sirwellington.alchemy.test.generation.GenerateString;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@AlchemyTest
+class EventPublisherTest {
+
+    @Mock
+    private KafkaProducer<String, String> producer;
+
+    @GenerateString
+    private String skuId;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    private EventPayload createPayload() {
+        return new EventPayload(
+            1L,
+            "RECEIPT",
+            skuId,
+            50,
+            BigDecimal.valueOf(10.00)
+        );
+    }
+
+    @Test
+    void publishesEventSuccessfully() throws Exception {
+        var payload = createPayload();
+        when(producer.send(any(ProducerRecord.class)))
+            .thenReturn(CompletableFuture.completedFuture(mockMetadata()));
+
+        var publisher = new EventPublisher(producer, objectMapper);
+        publisher.publish(payload);
+
+        verify(producer).send(any(ProducerRecord.class));
+    }
+
+    @Test
+    void publishesAdjustmentEvent() throws Exception {
+        var payload = new EventPayload(2L, "ADJUSTMENT", skuId, -10, BigDecimal.valueOf(5.50));
+        when(producer.send(any(ProducerRecord.class)))
+            .thenReturn(CompletableFuture.completedFuture(mockMetadata()));
+
+        var publisher = new EventPublisher(producer, objectMapper);
+        publisher.publish(payload);
+
+        verify(producer).send(any(ProducerRecord.class));
+    }
+
+    @Test
+    void publishesSaleEvent() throws Exception {
+        var payload = new EventPayload(3L, "SALE", skuId, -25, BigDecimal.valueOf(15.00));
+        when(producer.send(any(ProducerRecord.class)))
+            .thenReturn(CompletableFuture.completedFuture(mockMetadata()));
+
+        var publisher = new EventPublisher(producer, objectMapper);
+        publisher.publish(payload);
+
+        verify(producer).send(any(ProducerRecord.class));
+    }
+
+    @Test
+    void flushesAndClosesProducer() {
+        var publisher = new EventPublisher(producer, objectMapper);
+        publisher.close();
+
+        verify(producer).flush();
+        verify(producer).close();
+    }
+
+    @Test
+    void publishesMultipleEventsSequentially() throws Exception {
+        when(producer.send(any(ProducerRecord.class)))
+            .thenReturn(CompletableFuture.completedFuture(mockMetadata()));
+
+        var publisher = new EventPublisher(producer, objectMapper);
+
+        publisher.publish(createPayload());
+        publisher.publish(new EventPayload(2L, "SALE", skuId + "-B", -5, BigDecimal.valueOf(20.00)));
+
+        verify(producer, org.mockito.Mockito.times(2)).send(any(ProducerRecord.class));
+    }
+
+    @Test
+    void publishesEventWithZeroQuantity() throws Exception {
+        var payload = new EventPayload(4L, "ADJUSTMENT", skuId, 0, BigDecimal.ZERO);
+        when(producer.send(any(ProducerRecord.class)))
+            .thenReturn(CompletableFuture.completedFuture(mockMetadata()));
+
+        var publisher = new EventPublisher(producer, objectMapper);
+        publisher.publish(payload);
+
+        verify(producer).send(any(ProducerRecord.class));
+    }
+
+    @Test
+    void publishesEventWithLargeValues() throws Exception {
+        var payload = new EventPayload(Long.MAX_VALUE, "RECEIPT", skuId, Integer.MAX_VALUE, new BigDecimal("999999.99"));
+        when(producer.send(any(ProducerRecord.class)))
+            .thenReturn(CompletableFuture.completedFuture(mockMetadata()));
+
+        var publisher = new EventPublisher(producer, objectMapper);
+        publisher.publish(payload);
+
+        verify(producer).send(any(ProducerRecord.class));
+    }
+
+    private org.apache.kafka.clients.producer.RecordMetadata mockMetadata() {
+        return mock(org.apache.kafka.clients.producer.RecordMetadata.class);
+    }
+}

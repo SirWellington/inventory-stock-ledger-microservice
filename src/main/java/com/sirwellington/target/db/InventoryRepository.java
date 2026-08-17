@@ -2,6 +2,8 @@ package com.sirwellington.target.db;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -102,22 +104,36 @@ public class InventoryRepository {
     );
 
     private final DSLContext dsl;
+    private final Connection conn;
 
     public InventoryRepository(Connection connection) {
+        this.conn = connection;
         this.dsl = DSL.using(connection, SQLDialect.POSTGRES);
     }
 
     public InsertTransactionResponse insertTransaction(InsertTransactionRequest request) {
-        var result = dsl.insertInto(INVENTORY_TRANSACTIONS)
-                        .columns(SKU_ID, TRANSACTION_TYPE, QUANTITY_CHANGE, UNIT_COST)
-                        .values(request.skuId(), request.type().name(), request.quantityChange(), request.unitCost())
-                        .returning(TRANSACTION_ID, TRANSACTION_TIMESTAMP)
-                        .fetchOne();
+        OffsetDateTime now = OffsetDateTime.now();
 
-        return new InsertTransactionResponse(
-            result.get(TRANSACTION_ID),
-            result.get(TRANSACTION_TIMESTAMP)
-        );
+        try (var ps = conn.prepareStatement(
+                "INSERT INTO inventory_transactions (sku_id, transaction_type, quantity_change, unit_cost, transaction_timestamp) VALUES (?, ?, ?, ?, ?)",
+                PreparedStatement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, request.skuId());
+            ps.setString(2, request.type().name());
+            ps.setInt(3, request.quantityChange());
+            ps.setBigDecimal(4, request.unitCost());
+            ps.setObject(5, now);
+            ps.executeUpdate();
+
+            try (var rs = ps.getGeneratedKeys()) {
+                if (rs.next()) {
+                    return new InsertTransactionResponse(rs.getLong(1), now);
+                } else {
+                    throw new RuntimeException("No generated keys returned");
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public Optional<GetInventoryValueResponse> getInventoryValue(GetInventoryValueRequest request) {
