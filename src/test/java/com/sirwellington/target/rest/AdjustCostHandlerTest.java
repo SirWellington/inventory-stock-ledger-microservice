@@ -40,7 +40,7 @@ class AdjustCostHandlerTest {
     }
 
     @Test
-    void recordsPositiveAdjustmentSuccessfully() throws Exception {
+    void testRecordsPositiveAdjustmentSuccessfully() throws Exception {
         var request = new CostAdjustmentRequest(
             25,
             BigDecimal.valueOf(8.00),
@@ -65,7 +65,7 @@ class AdjustCostHandlerTest {
     }
 
     @Test
-    void recordsNegativeAdjustmentSuccessfully() throws Exception {
+    void testRecordsNegativeAdjustmentSuccessfully() throws Exception {
         var request = new CostAdjustmentRequest(
             -15,
             BigDecimal.valueOf(3.50),
@@ -84,7 +84,7 @@ class AdjustCostHandlerTest {
     }
 
     @Test
-    void calculatesNegativeImpactForWriteOff() throws Exception {
+    void testCalculatesNegativeImpactForWriteOff() throws Exception {
         var request = new CostAdjustmentRequest(
             -10,
             BigDecimal.valueOf(2.50),
@@ -102,7 +102,7 @@ class AdjustCostHandlerTest {
     }
 
     @Test
-    void returnsCorrectTransactionTimestamp() throws Exception {
+    void testReturnsCorrectTransactionTimestamp() throws Exception {
         var expectedTimestamp = OffsetDateTime.parse("2026-01-15T10:30:00Z");
         var request = new CostAdjustmentRequest(5, BigDecimal.valueOf(1.00), "TEST");
         when(repository.insertTransaction(any())).thenReturn(new InventoryRepository.InsertTransactionResponse(7L, expectedTimestamp));

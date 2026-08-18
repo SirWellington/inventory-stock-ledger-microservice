@@ -29,7 +29,7 @@ class GetLedgerHistoryHandlerTest {
     }
 
     @Test
-    void returnsEntriesForValidDateRange() throws Exception {
+    void testReturnsEntriesForValidDateRange() throws Exception {
         var start = OffsetDateTime.parse("2026-01-01T00:00:00Z");
         var end = OffsetDateTime.parse("2026-01-31T23:59:59Z");
 
@@ -47,7 +47,7 @@ class GetLedgerHistoryHandlerTest {
     }
 
     @Test
-    void returnsMultipleEntriesWhenAvailable() throws Exception {
+    void testReturnsMultipleEntriesWhenAvailable() throws Exception {
         var start = OffsetDateTime.parse("2026-01-01T00:00:00Z");
         var end = OffsetDateTime.parse("2026-01-31T23:59:59Z");
 
@@ -67,7 +67,7 @@ class GetLedgerHistoryHandlerTest {
     }
 
     @Test
-    void returnsEmptyListWhenNoTransactionsInRange() throws Exception {
+    void testReturnsEmptyListWhenNoTransactionsInRange() throws Exception {
         var start = OffsetDateTime.parse("2026-06-01T00:00:00Z");
         var end = OffsetDateTime.parse("2026-06-30T23:59:59Z");
 
@@ -82,7 +82,7 @@ class GetLedgerHistoryHandlerTest {
     }
 
     @Test
-    void returns400WhenStartDateMissing() throws Exception {
+    void testReturns400WhenStartDateMissing() throws Exception {
         Context ctx = mockContext(null, "2026-01-31T23:59:59Z");
 
         var handler = createHandler();
@@ -92,7 +92,7 @@ class GetLedgerHistoryHandlerTest {
     }
 
     @Test
-    void returns400WhenEndDateMissing() throws Exception {
+    void testReturns400WhenEndDateMissing() throws Exception {
         Context ctx = mockContext("2026-01-01T00:00:00Z", null);
 
         var handler = createHandler();
@@ -102,7 +102,7 @@ class GetLedgerHistoryHandlerTest {
     }
 
     @Test
-    void returns400WhenBothDatesMissing() throws Exception {
+    void testReturns400WhenBothDatesMissing() throws Exception {
         Context ctx = mockContext(null, null);
 
         var handler = createHandler();
@@ -112,7 +112,7 @@ class GetLedgerHistoryHandlerTest {
     }
 
     @Test
-    void mapsTransactionRecordToLedgerEntry() throws Exception {
+    void testMapsTransactionRecordToLedgerEntry() throws Exception {
         var timestamp = OffsetDateTime.parse("2026-03-15T12:00:00Z");
         var record = new InventoryRepository.TransactionRecord(
             99L, timestamp, "SKU-MAP", "RECEIPT", 75, new BigDecimal("12.50"), new BigDecimal("937.50")

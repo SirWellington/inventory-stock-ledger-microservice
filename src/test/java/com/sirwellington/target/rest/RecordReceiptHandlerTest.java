@@ -35,7 +35,7 @@ class RecordReceiptHandlerTest {
     }
 
     @Test
-    void recordsReceiptSuccessfully() throws Exception {
+    void testRecordsReceiptSuccessfully() throws Exception {
         var request = new RecordReceiptHandler.RecordReceiptRequest(skuId, 100, BigDecimal.valueOf(5.50));
         var now = OffsetDateTime.now();
         when(repository.insertTransaction(any())).thenReturn(new InventoryRepository.InsertTransactionResponse(42L, now));
@@ -56,7 +56,7 @@ class RecordReceiptHandlerTest {
     }
 
     @Test
-    void calculatesCorrectTotalAmountImpact() throws Exception {
+    void testCalculatesCorrectTotalAmountImpact() throws Exception {
         var request = new RecordReceiptHandler.RecordReceiptRequest(skuId, 50, BigDecimal.valueOf(12.75));
         when(repository.insertTransaction(any())).thenReturn(new InventoryRepository.InsertTransactionResponse(1L, OffsetDateTime.now()));
 
@@ -68,7 +68,7 @@ class RecordReceiptHandlerTest {
     }
 
     @Test
-    void recordsReceiptWithDecimalUnitCost() throws Exception {
+    void testRecordsReceiptWithDecimalUnitCost() throws Exception {
         var cost = new BigDecimal("99.9999");
         var request = new RecordReceiptHandler.RecordReceiptRequest(skuId, 10, cost);
         when(repository.insertTransaction(any())).thenReturn(new InventoryRepository.InsertTransactionResponse(5L, OffsetDateTime.now()));

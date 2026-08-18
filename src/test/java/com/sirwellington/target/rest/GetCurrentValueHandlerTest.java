@@ -30,7 +30,7 @@ class GetCurrentValueHandlerTest {
     }
 
     @Test
-    void returnsCurrentValueWhenSkuExists() throws Exception {
+    void testReturnsCurrentValueWhenSkuExists() throws Exception {
         var expectedValue = new InventoryRepository.GetInventoryValueResponse(250, new BigDecimal("12500.00"));
         when(repository.getInventoryValue(any())).thenReturn(Optional.of(expectedValue));
 
@@ -44,7 +44,7 @@ class GetCurrentValueHandlerTest {
     }
 
     @Test
-    void returnsZeroQuantityWhenInStockButEmpty() throws Exception {
+    void testReturnsZeroQuantityWhenInStockButEmpty() throws Exception {
         var zeroValue = new InventoryRepository.GetInventoryValueResponse(0, BigDecimal.ZERO);
         when(repository.getInventoryValue(any())).thenReturn(Optional.of(zeroValue));
 
@@ -58,7 +58,7 @@ class GetCurrentValueHandlerTest {
     }
 
     @Test
-    void returns404WhenSkuNotFound() throws Exception {
+    void testReturns404WhenSkuNotFound() throws Exception {
         when(repository.getInventoryValue(any())).thenReturn(Optional.empty());
 
         Context ctx = mock(Context.class);
@@ -72,7 +72,7 @@ class GetCurrentValueHandlerTest {
     }
 
     @Test
-    void returnsErrorDetailOnNotFound() throws Exception {
+    void testReturnsErrorDetailOnNotFound() throws Exception {
         when(repository.getInventoryValue(any())).thenReturn(Optional.empty());
 
         Context ctx = mock(Context.class);
@@ -86,7 +86,7 @@ class GetCurrentValueHandlerTest {
     }
 
     @Test
-    void handlesLargeInventoryValues() throws Exception {
+    void testHandlesLargeInventoryValues() throws Exception {
         var largeValue = new InventoryRepository.GetInventoryValueResponse(10000, new BigDecimal("999999.99"));
         when(repository.getInventoryValue(any())).thenReturn(Optional.of(largeValue));
 

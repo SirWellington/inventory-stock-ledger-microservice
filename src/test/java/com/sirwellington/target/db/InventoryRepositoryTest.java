@@ -60,7 +60,7 @@ class InventoryRepositoryTest {
     }
 
     @Test
-    void insertTransactionReturnsGeneratedIdAndTimestamp() {
+    void testInsertTransactionReturnsGeneratedIdAndTimestamp() {
         var request = new InventoryRepository.InsertTransactionRequest(
             TransactionType.RECEIPT,
             "SKU-001",
@@ -75,7 +75,7 @@ class InventoryRepositoryTest {
     }
 
     @Test
-    void insertMultipleTransactionsReturnsUniqueIds() {
+    void testInsertMultipleTransactionsReturnsUniqueIds() {
         var id1 = repository.insertTransaction(new InventoryRepository.InsertTransactionRequest(
             TransactionType.RECEIPT,
             "SKU-A",
@@ -94,7 +94,7 @@ class InventoryRepositoryTest {
     }
 
     @Test
-    void insertReceiptTransaction() {
+    void testInsertReceiptTransaction() {
         var response = repository.insertTransaction(new InventoryRepository.InsertTransactionRequest(
             TransactionType.RECEIPT,
             "SKU-REC",
@@ -107,7 +107,7 @@ class InventoryRepositoryTest {
     }
 
     @Test
-    void insertAdjustmentTransaction() {
+    void testInsertAdjustmentTransaction() {
         var response = repository.insertTransaction(new InventoryRepository.InsertTransactionRequest(
             TransactionType.ADJUSTMENT,
             "SKU-ADJ",
@@ -119,7 +119,7 @@ class InventoryRepositoryTest {
     }
 
     @Test
-    void insertSaleTransaction() {
+    void testInsertSaleTransaction() {
         var response = repository.insertTransaction(new InventoryRepository.InsertTransactionRequest(
             TransactionType.SALE,
             "SKU-SALE",
@@ -131,7 +131,7 @@ class InventoryRepositoryTest {
     }
 
     @Test
-    void getInventoryValueReturnsValueForExistingSku() throws Exception {
+    void testGetInventoryValueReturnsValueForExistingSku() throws Exception {
         try (var stmt = connection.createStatement()) {
             stmt.execute(
                 "INSERT INTO sku_inventory_snapshots (sku_id, current_quantity, total_current_value) " +
@@ -147,7 +147,7 @@ class InventoryRepositoryTest {
     }
 
     @Test
-    void getInventoryValueReturnsEmptyForMissingSku() {
+    void testGetInventoryValueReturnsEmptyForMissingSku() {
         var result = repository.getInventoryValue(
             new InventoryRepository.GetInventoryValueRequest("SKU-MISSING")
         );
@@ -156,7 +156,7 @@ class InventoryRepositoryTest {
     }
 
     @Test
-    void getLedgerHistoryReturnsTransactionsInRange() throws Exception {
+    void testGetLedgerHistoryReturnsTransactionsInRange() throws Exception {
         var now = OffsetDateTime.now();
         try (var stmt = connection.createStatement()) {
             stmt.execute(
@@ -174,7 +174,7 @@ class InventoryRepositoryTest {
     }
 
     @Test
-    void getLedgerHistoryReturnsEmptyWhenNoTransactionsInRange() {
+    void testGetLedgerHistoryReturnsEmptyWhenNoTransactionsInRange() {
         var future = OffsetDateTime.now().plusMonths(1);
         var result = repository.getLedgerHistory(new InventoryRepository.GetLedgerHistoryQuery(
             future, future.plusDays(1)
@@ -184,7 +184,7 @@ class InventoryRepositoryTest {
     }
 
     @Test
-    void getLedgerHistoryOrdersByTimestampAscending() throws Exception {
+    void testGetLedgerHistoryOrdersByTimestampAscending() throws Exception {
         try (var stmt = connection.createStatement()) {
             stmt.execute(
                 "INSERT INTO inventory_transactions (transaction_timestamp, sku_id, transaction_type, quantity_change, unit_cost) VALUES " +
@@ -202,7 +202,7 @@ class InventoryRepositoryTest {
     }
 
     @Test
-    void getLedgerHistoryFiltersByDateRange() throws Exception {
+    void testGetLedgerHistoryFiltersByDateRange() throws Exception {
         try (var stmt = connection.createStatement()) {
             stmt.execute(
                 "INSERT INTO inventory_transactions (transaction_timestamp, sku_id, transaction_type, quantity_change, unit_cost) VALUES " +
@@ -220,7 +220,7 @@ class InventoryRepositoryTest {
     }
 
     @Test
-    void transactionRecordContainsCorrectFields() throws Exception {
+    void testTransactionRecordContainsCorrectFields() throws Exception {
         var response = repository.insertTransaction(new InventoryRepository.InsertTransactionRequest(
             TransactionType.RECEIPT, "SKU-FIELD", 30, BigDecimal.valueOf(7.25)
         ));
@@ -242,7 +242,7 @@ class InventoryRepositoryTest {
     }
 
     @Test
-    void insertTransactionWithDecimalUnitCost() {
+    void testInsertTransactionWithDecimalUnitCost() {
         var response = repository.insertTransaction(new InventoryRepository.InsertTransactionRequest(
             TransactionType.RECEIPT, "SKU-DEC", 15, new BigDecimal("42.8765")
         ));
@@ -251,7 +251,7 @@ class InventoryRepositoryTest {
     }
 
     @Test
-    void getInventoryValueWithDecimalPrecision() throws Exception {
+    void testGetInventoryValueWithDecimalPrecision() throws Exception {
         try (var stmt = connection.createStatement()) {
             stmt.execute(
                 "INSERT INTO sku_inventory_snapshots (sku_id, current_quantity, total_current_value) VALUES ('SKU-PREC', 1234, 56789.01)"
@@ -264,7 +264,7 @@ class InventoryRepositoryTest {
     }
 
     @Test
-    void emptyLedgerHistoryResponseIsNotNull() {
+    void testEmptyLedgerHistoryResponseIsNotNull() {
         var future = futureInstants().mapping(i -> i.atOffset(ZoneOffset.UTC)).get();
         var result = repository.getLedgerHistory(new InventoryRepository.GetLedgerHistoryQuery(future, future.plusDays(1)));
 

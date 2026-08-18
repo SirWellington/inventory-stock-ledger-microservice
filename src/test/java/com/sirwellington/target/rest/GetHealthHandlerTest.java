@@ -14,7 +14,7 @@ import static org.mockito.Mockito.verify;
 class GetHealthHandlerTest {
 
     @Test
-    void returnsOkStatus() throws Exception {
+    void testReturnsOkStatus() throws Exception {
         Context ctx = mock(Context.class);
 
         var handler = new GetHealthHandler();

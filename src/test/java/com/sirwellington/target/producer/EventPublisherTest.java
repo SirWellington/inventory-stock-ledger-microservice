@@ -42,7 +42,7 @@ class EventPublisherTest {
     }
 
     @Test
-    void publishesEventSuccessfully() throws Exception {
+    void testPublishesEventSuccessfully() throws Exception {
         var payload = createPayload();
         when(producer.send(any(ProducerRecord.class)))
             .thenReturn(CompletableFuture.completedFuture(mockMetadata()));
@@ -54,7 +54,7 @@ class EventPublisherTest {
     }
 
     @Test
-    void publishesAdjustmentEvent() throws Exception {
+    void testPublishesAdjustmentEvent() throws Exception {
         var payload = new EventPayload(2L, "ADJUSTMENT", skuId, -10, BigDecimal.valueOf(5.50));
         when(producer.send(any(ProducerRecord.class)))
             .thenReturn(CompletableFuture.completedFuture(mockMetadata()));
@@ -66,7 +66,7 @@ class EventPublisherTest {
     }
 
     @Test
-    void publishesSaleEvent() throws Exception {
+    void testPublishesSaleEvent() throws Exception {
         var payload = new EventPayload(3L, "SALE", skuId, -25, BigDecimal.valueOf(15.00));
         when(producer.send(any(ProducerRecord.class)))
             .thenReturn(CompletableFuture.completedFuture(mockMetadata()));
@@ -78,7 +78,7 @@ class EventPublisherTest {
     }
 
     @Test
-    void flushesAndClosesProducer() {
+    void testFlushesAndClosesProducer() {
         var publisher = new EventPublisher(producer, objectMapper);
         publisher.close();
 
@@ -87,7 +87,7 @@ class EventPublisherTest {
     }
 
     @Test
-    void publishesMultipleEventsSequentially() throws Exception {
+    void testPublishesMultipleEventsSequentially() throws Exception {
         when(producer.send(any(ProducerRecord.class)))
             .thenReturn(CompletableFuture.completedFuture(mockMetadata()));
 
@@ -100,7 +100,7 @@ class EventPublisherTest {
     }
 
     @Test
-    void publishesEventWithZeroQuantity() throws Exception {
+    void testPublishesEventWithZeroQuantity() throws Exception {
         var payload = new EventPayload(4L, "ADJUSTMENT", skuId, 0, BigDecimal.ZERO);
         when(producer.send(any(ProducerRecord.class)))
             .thenReturn(CompletableFuture.completedFuture(mockMetadata()));
@@ -112,7 +112,7 @@ class EventPublisherTest {
     }
 
     @Test
-    void publishesEventWithLargeValues() throws Exception {
+    void testPublishesEventWithLargeValues() throws Exception {
         var payload = new EventPayload(Long.MAX_VALUE, "RECEIPT", skuId, Integer.MAX_VALUE, new BigDecimal("999999.99"));
         when(producer.send(any(ProducerRecord.class)))
             .thenReturn(CompletableFuture.completedFuture(mockMetadata()));
