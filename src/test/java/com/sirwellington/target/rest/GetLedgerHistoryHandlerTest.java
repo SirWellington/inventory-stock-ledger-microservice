@@ -1,7 +1,8 @@
 package com.sirwellington.target.rest;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 
@@ -30,11 +31,11 @@ class GetLedgerHistoryHandlerTest {
 
     @Test
     void testReturnsEntriesForValidDateRange() throws Exception {
-        var start = OffsetDateTime.parse("2026-01-01T00:00:00Z");
-        var end = OffsetDateTime.parse("2026-01-31T23:59:59Z");
+        var start = Instant.parse("2026-01-01T00:00:00Z");
+        var end = Instant.parse("2026-01-31T23:59:59Z");
 
         var record = new InventoryRepository.TransactionRecord(
-            1L, start.plusDays(5), "SKU-001", "RECEIPT", 50, new BigDecimal("10.00"), new BigDecimal("500.00")
+            1L, start.plus(5, ChronoUnit.DAYS), "SKU-001", "RECEIPT", 50, new BigDecimal("10.00"), new BigDecimal("500.00")
         );
         when(repository.getLedgerHistory(any())).thenReturn(new InventoryRepository.GetLedgerHistoryResponse(List.of(record)));
 
@@ -48,13 +49,13 @@ class GetLedgerHistoryHandlerTest {
 
     @Test
     void testReturnsMultipleEntriesWhenAvailable() throws Exception {
-        var start = OffsetDateTime.parse("2026-01-01T00:00:00Z");
-        var end = OffsetDateTime.parse("2026-01-31T23:59:59Z");
+        var start = Instant.parse("2026-01-01T00:00:00Z");
+        var end = Instant.parse("2026-01-31T23:59:59Z");
 
         var records = List.of(
-            new InventoryRepository.TransactionRecord(1L, start.plusDays(1), "SKU-A", "RECEIPT", 100, new BigDecimal("5.00"), new BigDecimal("500.00")),
-            new InventoryRepository.TransactionRecord(2L, start.plusDays(2), "SKU-B", "SALE", -10, new BigDecimal("8.00"), new BigDecimal("-80.00")),
-            new InventoryRepository.TransactionRecord(3L, start.plusDays(3), "SKU-A", "ADJUSTMENT", 5, new BigDecimal("5.00"), new BigDecimal("25.00"))
+            new InventoryRepository.TransactionRecord(1L, start.plus(1, ChronoUnit.DAYS), "SKU-A", "RECEIPT", 100, new BigDecimal("5.00"), new BigDecimal("500.00")),
+            new InventoryRepository.TransactionRecord(2L, start.plus(2, ChronoUnit.DAYS), "SKU-B", "SALE", -10, new BigDecimal("8.00"), new BigDecimal("-80.00")),
+            new InventoryRepository.TransactionRecord(3L, start.plus(3, ChronoUnit.DAYS), "SKU-A", "ADJUSTMENT", 5, new BigDecimal("5.00"), new BigDecimal("25.00"))
         );
         when(repository.getLedgerHistory(any())).thenReturn(new InventoryRepository.GetLedgerHistoryResponse(records));
 
@@ -68,8 +69,8 @@ class GetLedgerHistoryHandlerTest {
 
     @Test
     void testReturnsEmptyListWhenNoTransactionsInRange() throws Exception {
-        var start = OffsetDateTime.parse("2026-06-01T00:00:00Z");
-        var end = OffsetDateTime.parse("2026-06-30T23:59:59Z");
+        var start = Instant.parse("2026-06-01T00:00:00Z");
+        var end = Instant.parse("2026-06-30T23:59:59Z");
 
         when(repository.getLedgerHistory(any())).thenReturn(new InventoryRepository.GetLedgerHistoryResponse(List.of()));
 
@@ -113,7 +114,7 @@ class GetLedgerHistoryHandlerTest {
 
     @Test
     void testMapsTransactionRecordToLedgerEntry() throws Exception {
-        var timestamp = OffsetDateTime.parse("2026-03-15T12:00:00Z");
+        var timestamp = Instant.parse("2026-03-15T12:00:00Z");
         var record = new InventoryRepository.TransactionRecord(
             99L, timestamp, "SKU-MAP", "RECEIPT", 75, new BigDecimal("12.50"), new BigDecimal("937.50")
         );

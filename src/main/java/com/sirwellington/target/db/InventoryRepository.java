@@ -3,8 +3,8 @@ package com.sirwellington.target.db;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.time.OffsetDateTime;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,7 +26,7 @@ public class InventoryRepository {
 
     public record InsertTransactionResponse(
         long transactionId,
-        OffsetDateTime transactionTimestamp
+        Instant transactionTimestamp
     ) {}
 
     public record GetInventoryValueRequest(
@@ -39,13 +39,13 @@ public class InventoryRepository {
     ) {}
 
     public record GetLedgerHistoryQuery(
-        OffsetDateTime startDate,
-        OffsetDateTime endDate
+        Instant startDate,
+        Instant endDate
     ) {}
 
     public record TransactionRecord(
         long transactionId,
-        OffsetDateTime transactionTimestamp,
+        Instant transactionTimestamp,
         String skuId,
         String transactionType,
         int quantityChange,
@@ -65,9 +65,9 @@ public class InventoryRepository {
         "transaction_id",
         Long.class
     );
-    private static final Field<OffsetDateTime> TRANSACTION_TIMESTAMP = DSL.field(
+    private static final Field<Instant> TRANSACTION_TIMESTAMP = DSL.field(
         "transaction_timestamp",
-        OffsetDateTime.class
+        Instant.class
     );
     private static final Field<String> SKU_ID = DSL.field(
         "sku_id",
@@ -112,8 +112,9 @@ public class InventoryRepository {
     }
 
     public InsertTransactionResponse insertTransaction(InsertTransactionRequest request) {
-        OffsetDateTime now = OffsetDateTime.now();
+        var now = Instant.now();
 
+        //TODO: Why not use jooq here
         try (var ps = conn.prepareStatement(
                 "INSERT INTO inventory_transactions (sku_id, transaction_type, quantity_change, unit_cost, transaction_timestamp) VALUES (?, ?, ?, ?, ?)",
                 PreparedStatement.RETURN_GENERATED_KEYS)) {
@@ -121,7 +122,7 @@ public class InventoryRepository {
             ps.setString(2, request.type().name());
             ps.setInt(3, request.quantityChange());
             ps.setBigDecimal(4, request.unitCost());
-            ps.setObject(5, now);
+            ps.setTimestamp(5, Timestamp.from(now));
             ps.executeUpdate();
 
             try (var rs = ps.getGeneratedKeys()) {

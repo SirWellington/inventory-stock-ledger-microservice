@@ -1,27 +1,25 @@
 package com.sirwellington.target.rest;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 
+import com.sirwellington.target.db.InventoryRepository;
+import com.sirwellington.target.db.InventoryRepository.InsertTransactionResponse;
+import com.sirwellington.target.model.EventPayload;
+import com.sirwellington.target.producer.EventPublisher;
 import com.sirwellington.target.rest.AdjustCostHandler.CostAdjustmentRequest;
+import io.javalin.http.Context;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-
-import com.sirwellington.target.db.InventoryRepository;
-import com.sirwellington.target.model.EventPayload;
-import com.sirwellington.target.producer.EventPublisher;
-
-import io.javalin.http.Context;
 import tech.sirwellington.alchemy.test.AlchemyTest;
 import tech.sirwellington.alchemy.test.generation.GenerateString;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.*;
+import static tech.sirwellington.alchemy.test.ThrowableAssertion.assertThrows;
 
 @AlchemyTest
 class AdjustCostHandlerTest {
@@ -40,14 +38,22 @@ class AdjustCostHandlerTest {
     }
 
     @Test
+    void testConstructorFailsWithNull() {
+        assertThrows(() -> new AdjustCostHandler(null, publisher));
+        assertThrows(() -> new AdjustCostHandler(repository, null));
+        assertThrows(() -> new AdjustCostHandler(null, null));
+    }
+
+    @Test
     void testRecordsPositiveAdjustmentSuccessfully() throws Exception {
         var request = new CostAdjustmentRequest(
             25,
             BigDecimal.valueOf(8.00),
             "REPRICE"
         );
+        var repositoryResponse = new InsertTransactionResponse(10L, Instant.now());
         when(repository.insertTransaction(any()))
-            .thenReturn(new InventoryRepository.InsertTransactionResponse(10L, OffsetDateTime.now()));
+            .thenReturn(repositoryResponse);
 
         var ctx = mockContext(request);
         when(ctx.pathParam("skuId")).thenReturn(skuId);
@@ -72,7 +78,7 @@ class AdjustCostHandlerTest {
             "DAMAGED"
         );
         when(repository.insertTransaction(any()))
-            .thenReturn(new InventoryRepository.InsertTransactionResponse(2L, OffsetDateTime.now()));
+            .thenReturn(new InsertTransactionResponse(2L, Instant.now()));
 
         var ctx = mockContext(request);
         when(ctx.pathParam("skuId")).thenReturn(skuId);
@@ -90,7 +96,8 @@ class AdjustCostHandlerTest {
             BigDecimal.valueOf(2.50),
             "WRITEOFF"
         );
-        when(repository.insertTransaction(any())).thenReturn(new InventoryRepository.InsertTransactionResponse(3L, OffsetDateTime.now()));
+        var repositoryResponse = new InsertTransactionResponse(3L, Instant.now());
+        when(repository.insertTransaction(any())).thenReturn(repositoryResponse);
 
         var ctx = mockContext(request);
         when(ctx.pathParam("skuId")).thenReturn(skuId);
@@ -103,9 +110,10 @@ class AdjustCostHandlerTest {
 
     @Test
     void testReturnsCorrectTransactionTimestamp() throws Exception {
-        var expectedTimestamp = OffsetDateTime.parse("2026-01-15T10:30:00Z");
+        var expectedTimestamp = Instant.parse("2026-01-15T10:30:00Z");
         var request = new CostAdjustmentRequest(5, BigDecimal.valueOf(1.00), "TEST");
-        when(repository.insertTransaction(any())).thenReturn(new InventoryRepository.InsertTransactionResponse(7L, expectedTimestamp));
+        var repositoryResponse = new InsertTransactionResponse(7L, expectedTimestamp);
+        when(repository.insertTransaction(any())).thenReturn(repositoryResponse);
 
         var ctx = mockContext(request);
         when(ctx.pathParam("skuId")).thenReturn(skuId);
@@ -116,10 +124,10 @@ class AdjustCostHandlerTest {
         verify(publisher).publish(any(EventPayload.class));
     }
 
-    Context mockContext(Object body) {
-        Context ctx = mock(Context.class);
+    private Context mockContext(Object body) {
+        var ctx = mock(Context.class);
         when(ctx.bodyAsClass(any())).thenReturn(body);
-        lenient().when(ctx.status(org.mockito.ArgumentMatchers.anyInt())).thenReturn(ctx);
+        lenient().when(ctx.status(anyInt())).thenReturn(ctx);
         return ctx;
     }
 }

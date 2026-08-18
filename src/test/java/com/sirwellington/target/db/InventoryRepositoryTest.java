@@ -3,10 +3,9 @@ package com.sirwellington.target.db;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 
+import com.sirwellington.target.db.InventoryRepository.GetLedgerHistoryQuery;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -20,7 +19,9 @@ import tech.sirwellington.alchemy.generator.TimeGenerators;
 
 import javax.sql.DataSource;
 
+import static java.time.temporal.ChronoUnit.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static tech.sirwellington.alchemy.generator.AlchemyGenerator.one;
 import static tech.sirwellington.alchemy.generator.TimeGenerators.futureInstants;
 
 class InventoryRepositoryTest {
@@ -157,17 +158,17 @@ class InventoryRepositoryTest {
 
     @Test
     void testGetLedgerHistoryReturnsTransactionsInRange() throws Exception {
-        var now = OffsetDateTime.now();
+        var now = Instant.now();
         try (var stmt = connection.createStatement()) {
             stmt.execute(
                 "INSERT INTO inventory_transactions (sku_id, transaction_type, quantity_change, unit_cost, transaction_timestamp) VALUES " +
                 "('SKU-HIST', 'RECEIPT', 100, 5.00, '" + now + "'), " +
-                "('SKU-HIST', 'SALE', -20, 5.00, '" + now.plusMinutes(5) + "')"
+                "('SKU-HIST', 'SALE', -20, 5.00, '" + now.plus(5, MINUTES) + "')"
             );
         }
 
-        var result = repository.getLedgerHistory(new InventoryRepository.GetLedgerHistoryQuery(
-            now.minusDays(1), now.plusDays(1)
+        var result = repository.getLedgerHistory(new GetLedgerHistoryQuery(
+            now.minus(1, DAYS), now.plus(1, DAYS)
         ));
 
         assertThat(result.transactions()).hasSize(2);
@@ -175,9 +176,9 @@ class InventoryRepositoryTest {
 
     @Test
     void testGetLedgerHistoryReturnsEmptyWhenNoTransactionsInRange() {
-        var future = OffsetDateTime.now().plusMonths(1);
-        var result = repository.getLedgerHistory(new InventoryRepository.GetLedgerHistoryQuery(
-            future, future.plusDays(1)
+        var future = Instant.now().plus(30, DAYS);
+        var result = repository.getLedgerHistory(new GetLedgerHistoryQuery(
+            future, future.plus(1, DAYS)
         ));
 
         assertThat(result.transactions()).isEmpty();
@@ -193,9 +194,9 @@ class InventoryRepositoryTest {
             );
         }
 
-        var result = repository.getLedgerHistory(new InventoryRepository.GetLedgerHistoryQuery(
-            OffsetDateTime.parse("2026-03-01T00:00:00Z"),
-            OffsetDateTime.parse("2026-03-31T23:59:59Z")
+        var result = repository.getLedgerHistory(new GetLedgerHistoryQuery(
+            Instant.parse("2026-03-01T00:00:00Z"),
+            Instant.parse("2026-03-31T23:59:59Z")
         ));
 
         assertThat(result.transactions()).hasSize(2);
@@ -211,9 +212,9 @@ class InventoryRepositoryTest {
             );
         }
 
-        var result = repository.getLedgerHistory(new InventoryRepository.GetLedgerHistoryQuery(
-            OffsetDateTime.parse("2026-04-01T00:00:00Z"),
-            OffsetDateTime.parse("2026-09-30T23:59:59Z")
+        var result = repository.getLedgerHistory(new GetLedgerHistoryQuery(
+            Instant.parse("2026-04-01T00:00:00Z"),
+            Instant.parse("2026-09-30T23:59:59Z")
         ));
 
         assertThat(result.transactions()).hasSize(1);
@@ -231,13 +232,13 @@ class InventoryRepositoryTest {
             );
         }
 
-        var historyQuery = repository.getLedgerHistory(new InventoryRepository.GetLedgerHistoryQuery(
-            response.transactionTimestamp().minusHours(1),
-            response.transactionTimestamp().plusHours(1)
+        var historyQuery = repository.getLedgerHistory(new GetLedgerHistoryQuery(
+            response.transactionTimestamp().minus(1, HOURS),
+            response.transactionTimestamp().plus(1, HOURS)
         ));
 
         assertThat(historyQuery.transactions()).hasSize(1);
-        var record = historyQuery.transactions().get(0);
+        var record = historyQuery.transactions().getFirst();
         assertThat(record.skuId()).isEqualTo("SKU-FIELD");
     }
 
@@ -265,8 +266,9 @@ class InventoryRepositoryTest {
 
     @Test
     void testEmptyLedgerHistoryResponseIsNotNull() {
-        var future = futureInstants().mapping(i -> i.atOffset(ZoneOffset.UTC)).get();
-        var result = repository.getLedgerHistory(new InventoryRepository.GetLedgerHistoryQuery(future, future.plusDays(1)));
+        var future = one(futureInstants());
+        var repositoryResponse = new GetLedgerHistoryQuery(future, future.plus(1, DAYS));
+        var result = repository.getLedgerHistory(repositoryResponse);
 
         assertThat(result).isNotNull();
         assertThat(result.transactions()).isNotNull();

@@ -1,6 +1,7 @@
 package com.sirwellington.target.rest;
 
-import java.time.OffsetDateTime;
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -8,6 +9,7 @@ import java.util.Objects;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.sirwellington.target.db.InventoryRepository;
+import com.sirwellington.target.db.InventoryRepository.GetLedgerHistoryQuery;
 import com.sirwellington.target.rest.GetLedgerHistoryHandler.GetLedgerHistoryResponse.LedgerEntry;
 import io.javalin.http.Context;
 import org.slf4j.Logger;
@@ -39,10 +41,10 @@ public class GetLedgerHistoryHandler {
             return;
         }
 
-        var startDate = OffsetDateTime.parse(startDateStr);
-        var endDate = OffsetDateTime.parse(endDateStr);
+        var startDate = Instant.parse(startDateStr);
+        var endDate = Instant.parse(endDateStr);
 
-        var result = repository.getLedgerHistory(new InventoryRepository.GetLedgerHistoryQuery(
+        var result = repository.getLedgerHistory(new GetLedgerHistoryQuery(
             startDate,
             endDate
         ));
@@ -74,12 +76,12 @@ public class GetLedgerHistoryHandler {
     ) {
         public record LedgerEntry(
             long transactionId,
-            OffsetDateTime transactionTimestamp,
+            Instant transactionTimestamp,
             String skuId,
             String transactionType,
             int quantityChange,
-            java.math.BigDecimal unitCost,
-            java.math.BigDecimal totalAmountImpact
+            BigDecimal unitCost,
+            BigDecimal totalAmountImpact
         ) {}
     }
 }

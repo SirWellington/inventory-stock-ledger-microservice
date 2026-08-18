@@ -1,7 +1,7 @@
 package com.sirwellington.target.rest;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.Objects;
 
 import com.google.inject.Inject;
@@ -79,7 +79,7 @@ public class AdjustCostHandler {
 
     public record CostAdjustmentResponse(
         long transactionId,
-        OffsetDateTime transactionTimestamp,
+        Instant transactionTimestamp,
         String skuId,
         String transactionType,
         int quantityChange,

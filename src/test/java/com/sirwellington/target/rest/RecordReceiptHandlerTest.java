@@ -1,7 +1,7 @@
 package com.sirwellington.target.rest;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -37,7 +37,7 @@ class RecordReceiptHandlerTest {
     @Test
     void testRecordsReceiptSuccessfully() throws Exception {
         var request = new RecordReceiptHandler.RecordReceiptRequest(skuId, 100, BigDecimal.valueOf(5.50));
-        var now = OffsetDateTime.now();
+        var now = Instant.now();
         when(repository.insertTransaction(any())).thenReturn(new InventoryRepository.InsertTransactionResponse(42L, now));
 
         Context ctx = mockContextWithBody(request);
@@ -58,7 +58,7 @@ class RecordReceiptHandlerTest {
     @Test
     void testCalculatesCorrectTotalAmountImpact() throws Exception {
         var request = new RecordReceiptHandler.RecordReceiptRequest(skuId, 50, BigDecimal.valueOf(12.75));
-        when(repository.insertTransaction(any())).thenReturn(new InventoryRepository.InsertTransactionResponse(1L, OffsetDateTime.now()));
+        when(repository.insertTransaction(any())).thenReturn(new InventoryRepository.InsertTransactionResponse(1L, Instant.now()));
 
         Context ctx = mockContextWithBody(request);
         var handler = createHandler();
@@ -71,7 +71,7 @@ class RecordReceiptHandlerTest {
     void testRecordsReceiptWithDecimalUnitCost() throws Exception {
         var cost = new BigDecimal("99.9999");
         var request = new RecordReceiptHandler.RecordReceiptRequest(skuId, 10, cost);
-        when(repository.insertTransaction(any())).thenReturn(new InventoryRepository.InsertTransactionResponse(5L, OffsetDateTime.now()));
+        when(repository.insertTransaction(any())).thenReturn(new InventoryRepository.InsertTransactionResponse(5L, Instant.now()));
 
         Context ctx = mockContextWithBody(request);
         var handler = createHandler();
