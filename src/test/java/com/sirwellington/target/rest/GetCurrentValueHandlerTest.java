@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Optional;
 
+import com.sirwellington.target.db.InventoryRepository.GetInventoryValueResponse;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
@@ -31,10 +32,10 @@ class GetCurrentValueHandlerTest {
 
     @Test
     void testReturnsCurrentValueWhenSkuExists() throws Exception {
-        var expectedValue = new InventoryRepository.GetInventoryValueResponse(250, new BigDecimal("12500.00"));
+        var expectedValue = new GetInventoryValueResponse(250, new BigDecimal("12500.00"));
         when(repository.getInventoryValue(any())).thenReturn(Optional.of(expectedValue));
 
-        Context ctx = mock(Context.class);
+        var ctx = mock(Context.class);
         when(ctx.pathParam("skuId")).thenReturn(skuId);
 
         var handler = createHandler();
@@ -45,7 +46,7 @@ class GetCurrentValueHandlerTest {
 
     @Test
     void testReturnsZeroQuantityWhenInStockButEmpty() throws Exception {
-        var zeroValue = new InventoryRepository.GetInventoryValueResponse(0, BigDecimal.ZERO);
+        var zeroValue = new GetInventoryValueResponse(0, BigDecimal.ZERO);
         when(repository.getInventoryValue(any())).thenReturn(Optional.of(zeroValue));
 
         Context ctx = mock(Context.class);
@@ -87,7 +88,7 @@ class GetCurrentValueHandlerTest {
 
     @Test
     void testHandlesLargeInventoryValues() throws Exception {
-        var largeValue = new InventoryRepository.GetInventoryValueResponse(10000, new BigDecimal("999999.99"));
+        var largeValue = new GetInventoryValueResponse(10000, new BigDecimal("999999.99"));
         when(repository.getInventoryValue(any())).thenReturn(Optional.of(largeValue));
 
         Context ctx = mock(Context.class);

@@ -146,7 +146,13 @@ class GetLedgerHistoryHandlerTest {
     void testMapsTransactionRecordToLedgerEntry() throws Exception {
         var timestamp = Instant.parse("2026-03-15T12:00:00Z");
         var record = new TransactionRecord(
-            99L, timestamp, "SKU-MAP", "RECEIPT", 75, new BigDecimal("12.50"), new BigDecimal("937.50")
+            99L,
+            timestamp,
+            "SKU-MAP",
+            "RECEIPT",
+            75,
+            new BigDecimal("12.50"),
+            new BigDecimal("937.50")
         );
         var repositoryResponse = new GetLedgerHistoryResponse(List.of(record));
         when(repository.getLedgerHistory(any())).thenReturn(repositoryResponse);

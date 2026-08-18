@@ -3,6 +3,8 @@ package com.sirwellington.target.rest;
 import java.math.BigDecimal;
 import java.time.Instant;
 
+import com.sirwellington.target.db.InventoryRepository.InsertTransactionResponse;
+import com.sirwellington.target.rest.RecordReceiptHandler.RecordReceiptRequest;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -14,6 +16,7 @@ import com.sirwellington.target.producer.EventPublisher;
 
 import io.javalin.http.Context;
 import tech.sirwellington.alchemy.test.AlchemyTest;
+import tech.sirwellington.alchemy.test.ThrowableAssertion;
 import tech.sirwellington.alchemy.test.generation.GenerateString;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,25 +25,42 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static tech.sirwellington.alchemy.test.ThrowableAssertion.assertThrows;
 
 @AlchemyTest
 class RecordReceiptHandlerTest {
 
-    @Mock InventoryRepository repository;
-    @Mock EventPublisher publisher;
-    @GenerateString String skuId;
+    @Mock
+    private InventoryRepository repository;
+    @Mock
+    private EventPublisher publisher;
+    @GenerateString
+    private String skuId;
 
     private RecordReceiptHandler createHandler() {
         return new RecordReceiptHandler(repository, publisher);
     }
 
     @Test
-    void testRecordsReceiptSuccessfully() throws Exception {
-        var request = new RecordReceiptHandler.RecordReceiptRequest(skuId, 100, BigDecimal.valueOf(5.50));
-        var now = Instant.now();
-        when(repository.insertTransaction(any())).thenReturn(new InventoryRepository.InsertTransactionResponse(42L, now));
+    void testConstructorFailsWithNull() {
+        assertThrows(() -> new RecordReceiptHandler(null, publisher));
+        assertThrows(() -> new RecordReceiptHandler(repository, null));
+        assertThrows(() -> new RecordReceiptHandler(null, null));
+    }
 
-        Context ctx = mockContextWithBody(request);
+    @Test
+    void testRecordsReceiptSuccessfully() throws Exception {
+        var request = new RecordReceiptRequest(
+            skuId,
+            100,
+            BigDecimal.valueOf(5.50)
+        );
+        var now = Instant.now();
+        var repositoryResponse = new InsertTransactionResponse(42L, now);
+        when(repository.insertTransaction(any()))
+            .thenReturn(repositoryResponse);
+
+        var ctx = mockContextWithBody(request);
 
         var handler = createHandler();
         handler.handle(ctx);
@@ -57,10 +77,16 @@ class RecordReceiptHandlerTest {
 
     @Test
     void testCalculatesCorrectTotalAmountImpact() throws Exception {
-        var request = new RecordReceiptHandler.RecordReceiptRequest(skuId, 50, BigDecimal.valueOf(12.75));
-        when(repository.insertTransaction(any())).thenReturn(new InventoryRepository.InsertTransactionResponse(1L, Instant.now()));
+        var request = new RecordReceiptRequest(
+            skuId,
+            50,
+            BigDecimal.valueOf(12.75)
+        );
+        var repositoryResponse = new InsertTransactionResponse(1L, Instant.now());
+        when(repository.insertTransaction(any()))
+            .thenReturn(repositoryResponse);
 
-        Context ctx = mockContextWithBody(request);
+        var ctx = mockContextWithBody(request);
         var handler = createHandler();
         handler.handle(ctx);
 
@@ -70,10 +96,12 @@ class RecordReceiptHandlerTest {
     @Test
     void testRecordsReceiptWithDecimalUnitCost() throws Exception {
         var cost = new BigDecimal("99.9999");
-        var request = new RecordReceiptHandler.RecordReceiptRequest(skuId, 10, cost);
-        when(repository.insertTransaction(any())).thenReturn(new InventoryRepository.InsertTransactionResponse(5L, Instant.now()));
+        var request = new RecordReceiptRequest(skuId, 10, cost);
+        var repositoryResponse = new InsertTransactionResponse(5L, Instant.now());
+        when(repository.insertTransaction(any()))
+            .thenReturn(repositoryResponse);
 
-        Context ctx = mockContextWithBody(request);
+        var ctx = mockContextWithBody(request);
         var handler = createHandler();
         handler.handle(ctx);
 
@@ -81,7 +109,7 @@ class RecordReceiptHandlerTest {
     }
 
     Context mockContextWithBody(Object body) {
-        Context ctx = mock(Context.class);
+        var ctx = mock(Context.class);
         when(ctx.bodyAsClass(any())).thenReturn(body);
         lenient().when(ctx.status(org.mockito.ArgumentMatchers.anyInt())).thenReturn(ctx);
         return ctx;
