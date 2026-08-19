@@ -13,11 +13,14 @@ import java.util.Optional;
 import javax.sql.DataSource;
 
 import com.sirwellington.target.model.TransactionType;
+import com.sirwellington.target.rest.OperationFailedException;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.SQLDialect;
 import org.jooq.Table;
 import org.jooq.impl.DSL;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class InventoryRepository {
 
@@ -107,6 +110,8 @@ public class InventoryRepository {
         BigDecimal.class
     );
 
+    private static final Logger LOG = LoggerFactory.getLogger(InventoryRepository.class);
+
     private final DataSource dataSource;
     private final DSLContext dsl;
 
@@ -117,18 +122,14 @@ public class InventoryRepository {
 
     public InsertTransactionResponse insertTransaction(InsertTransactionRequest request) {
         var now = Instant.now();
-        Connection conn = null;
-        try {
-            conn = dataSource.getConnection();
-        }
-        catch (SQLException ex) {
-            throw new RuntimeException("Failed to connect to database", ex);
-        }
 
         //TODO: Why not use jooq here
-        try (var ps = conn.prepareStatement(
+        try (
+            var connection = dataSource.getConnection();
+            var ps = connection.prepareStatement(
                 "INSERT INTO inventory_transactions (sku_id, transaction_type, quantity_change, unit_cost, transaction_timestamp) VALUES (?, ?, ?, ?, ?)",
-                PreparedStatement.RETURN_GENERATED_KEYS)) {
+                PreparedStatement.RETURN_GENERATED_KEYS)
+        ) {
             ps.setString(1, request.skuId());
             ps.setString(2, request.type().name());
             ps.setInt(3, request.quantityChange());
@@ -144,7 +145,9 @@ public class InventoryRepository {
                 }
             }
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            var message = "Failed to insert transaction into 'inventory_transactions'";
+            LOG.error(message, ex);
+            throw new OperationFailedException(message, ex);
         }
     }
 
