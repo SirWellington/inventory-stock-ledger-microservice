@@ -60,11 +60,9 @@ public class EventPublisher {
             );
         }
         catch (Exception ex) {
-            LOG.error(
-                "Failed to publish event for sku={}",
-                payload.skuId(),
-                ex
-            );
+            var errorMessage = MessageFormat.format("Failed to publish event for sku [{0}]", payload.skuId());
+            LOG.error(errorMessage, ex);
+            throw new OperationFailedException(errorMessage, ex);
         }
     }
 
