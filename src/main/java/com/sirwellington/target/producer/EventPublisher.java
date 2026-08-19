@@ -1,10 +1,12 @@
 package com.sirwellington.target.producer;
 
+import java.text.MessageFormat;
 import java.util.Objects;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sirwellington.target.model.EventPayload;
+import com.sirwellington.target.rest.OperationFailedException;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
@@ -34,12 +36,12 @@ public class EventPublisher {
             payloadJson = objectMapper.writeValueAsString(payload);
         }
         catch (JsonProcessingException ex) {
-            LOG.error(
-                "Failed to serialize event payload for sku={}",
-                payload.skuId(),
-                ex
+            var message = MessageFormat.format(
+                "Failed to serialize event payload for sku [{0}]",
+                payload.skuId()
             );
-            return;
+            LOG.error(message, ex);
+            throw new OperationFailedException(message, ex);
         }
 
         var message = new ProducerRecord<>(TOPIC, payload.skuId(), payloadJson);
