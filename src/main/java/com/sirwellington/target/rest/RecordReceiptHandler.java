@@ -58,7 +58,7 @@ public class RecordReceiptHandler {
             TransactionType.RECEIPT.name(),
             request.skuId(),
             request.quantity(),
-            request.unitCost()
+            response.unitCost()
         );
 
         publisher.publish(eventPayload);
@@ -71,8 +71,8 @@ public class RecordReceiptHandler {
             request.skuId(),
             TransactionType.RECEIPT.name(),
             request.quantity(),
-            request.unitCost(),
-            BigDecimal.valueOf(request.quantity()).multiply(request.unitCost())
+            response.unitCost(),
+            response.totalAmountImpact()
         ));
     }
 

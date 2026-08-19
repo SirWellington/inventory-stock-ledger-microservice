@@ -49,7 +49,7 @@ public class AdjustCostHandler {
             TransactionType.ADJUSTMENT.name(),
             skuId,
             request.quantityChange(),
-            request.unitCost()
+            response.unitCost()
         );
 
         publisher.publish(eventPayload);
@@ -66,8 +66,8 @@ public class AdjustCostHandler {
             skuId,
             TransactionType.ADJUSTMENT.name(),
             request.quantityChange(),
-            request.unitCost(),
-            BigDecimal.valueOf(request.quantityChange()).multiply(request.unitCost())
+            response.unitCost(),
+            response.totalAmountImpact()
         ));
     }
 
