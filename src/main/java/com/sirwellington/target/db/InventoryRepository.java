@@ -3,10 +3,14 @@ package com.sirwellington.target.db;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+
+import javax.sql.DataSource;
 
 import com.sirwellington.target.model.TransactionType;
 import org.jooq.DSLContext;
@@ -103,16 +107,23 @@ public class InventoryRepository {
         BigDecimal.class
     );
 
+    private final DataSource dataSource;
     private final DSLContext dsl;
-    private final Connection conn;
 
-    public InventoryRepository(Connection connection) {
-        this.conn = connection;
-        this.dsl = DSL.using(connection, SQLDialect.POSTGRES);
+    public InventoryRepository(DataSource dataSource) {
+        this.dataSource = Objects.requireNonNull(dataSource);
+        this.dsl = DSL.using(dataSource, SQLDialect.POSTGRES);
     }
 
     public InsertTransactionResponse insertTransaction(InsertTransactionRequest request) {
         var now = Instant.now();
+        Connection conn = null;
+        try {
+            conn = dataSource.getConnection();
+        }
+        catch (SQLException ex) {
+            throw new RuntimeException("Failed to connect to database", ex);
+        }
 
         //TODO: Why not use jooq here
         try (var ps = conn.prepareStatement(
@@ -132,8 +143,8 @@ public class InventoryRepository {
                     throw new RuntimeException("No generated keys returned");
                 }
             }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
         }
     }
 

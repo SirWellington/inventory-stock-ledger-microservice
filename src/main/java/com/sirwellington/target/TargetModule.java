@@ -1,10 +1,12 @@
 package com.sirwellington.target;
 
 import java.sql.Connection;
+import java.util.Objects;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.sql.DataSource;
+import javax.xml.crypto.Data;
 
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.inject.AbstractModule;
@@ -19,13 +21,15 @@ import com.sirwellington.target.rest.GetLedgerHistoryHandler;
 import com.sirwellington.target.rest.RecordReceiptHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.producer.KafkaProducer;
+import tech.sirwellington.alchemy.annotations.arguments.Required;
 
 public class TargetModule extends AbstractModule {
 
     private final DataSource dataSource;
 
     @Inject
-    public TargetModule(DataSource dataSource) {
+    public TargetModule(@Required DataSource dataSource) {
+        Objects.requireNonNull(dataSource);
         this.dataSource = dataSource;
     }
 
@@ -38,15 +42,14 @@ public class TargetModule extends AbstractModule {
     }
 
     @Provides
-    @Singleton
-    Connection provideConnection() throws Exception {
-        return dataSource.getConnection();
+    DataSource provideDataSource() {
+        return dataSource;
     }
 
     @Provides
     @Singleton
-    InventoryRepository provideInventoryRepository(Connection connection) {
-        return new InventoryRepository(connection);
+    InventoryRepository provideInventoryRepository(DataSource connection) {
+        return new InventoryRepository(dataSource);
     }
 
     @Provides
