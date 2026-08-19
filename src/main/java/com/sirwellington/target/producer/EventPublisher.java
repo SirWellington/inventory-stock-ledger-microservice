@@ -49,6 +49,7 @@ public class EventPublisher {
 
         try {
             // We want to wait until we know for sure Kafka published the message.
+            // TODO: future.get() may stall, so let's add a timeout to prevent this thread getting stuck permanently.
             // TODO: We may want to add some kind of offline ROLLBACK operation to undo any database saves,
             // or we could put them in a dead-letter-queue.
             var metadata = future.get();

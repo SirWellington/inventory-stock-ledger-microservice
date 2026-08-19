@@ -41,6 +41,7 @@ public class GetLedgerHistoryHandler {
             return;
         }
 
+        // TODO: Handle exceptions from parsing errors
         var startDate = Instant.parse(startDateStr);
         var endDate = Instant.parse(endDateStr);
 
