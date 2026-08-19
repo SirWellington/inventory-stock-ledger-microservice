@@ -123,27 +123,24 @@ public class InventoryRepository {
     public InsertTransactionResponse insertTransaction(InsertTransactionRequest request) {
         var now = Instant.now();
 
-        //TODO: Why not use jooq here
-        try (
-            var connection = dataSource.getConnection();
-            var ps = connection.prepareStatement(
-                "INSERT INTO inventory_transactions (sku_id, transaction_type, quantity_change, unit_cost, transaction_timestamp) VALUES (?, ?, ?, ?, ?)",
-                PreparedStatement.RETURN_GENERATED_KEYS)
-        ) {
-            ps.setString(1, request.skuId());
-            ps.setString(2, request.type().name());
-            ps.setInt(3, request.quantityChange());
-            ps.setBigDecimal(4, request.unitCost());
-            ps.setTimestamp(5, Timestamp.from(now));
-            ps.executeUpdate();
+        try {
+            var txnId = dsl.insertInto(
+                INVENTORY_TRANSACTIONS,
+                SKU_ID,
+                TRANSACTION_TYPE,
+                QUANTITY_CHANGE,
+                UNIT_COST,
+                TRANSACTION_TIMESTAMP
+            ).values(
+                request.skuId,
+                request.type.name(),
+                request.quantityChange,
+                request.unitCost,
+                now
+            ).returning(TRANSACTION_ID)
+             .fetchOne(TRANSACTION_ID);
 
-            try (var rs = ps.getGeneratedKeys()) {
-                if (rs.next()) {
-                    return new InsertTransactionResponse(rs.getLong(1), now);
-                } else {
-                    throw new RuntimeException("No generated keys returned");
-                }
-            }
+            return new InsertTransactionResponse(txnId, now);
         } catch (Exception ex) {
             var message = "Failed to insert transaction into 'inventory_transactions'";
             LOG.error(message, ex);
