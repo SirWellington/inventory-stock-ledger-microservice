@@ -81,10 +81,14 @@ class AdjustCostHandlerTest {
             BigDecimal.valueOf(3.50),
             "DAMAGED"
         );
+        var response = new InsertTransactionResponse(
+            2L,
+            Instant.now(),
+            BigDecimal.valueOf(3.50),
+            BigDecimal.valueOf(-52.50)
+        );
         when(repository.insertTransaction(any()))
-            .thenReturn(new InsertTransactionResponse(
-                2L, Instant.now(), BigDecimal.valueOf(3.50), BigDecimal.valueOf(-52.50)
-            ));
+            .thenReturn(response);
 
         var ctx = mockContext(request);
         when(ctx.pathParam("skuId")).thenReturn(skuId);
@@ -102,10 +106,14 @@ class AdjustCostHandlerTest {
             BigDecimal.valueOf(2.50),
             "WRITEOFF"
         );
-        var repositoryResponse = new InsertTransactionResponse(
-            3L, Instant.now(), BigDecimal.valueOf(2.50), BigDecimal.valueOf(-25.00)
+        var response = new InsertTransactionResponse(
+            3L,
+            Instant.now(),
+            BigDecimal.valueOf(2.50),
+            BigDecimal.valueOf(-25.00)
         );
-        when(repository.insertTransaction(any())).thenReturn(repositoryResponse);
+        when(repository.insertTransaction(any()))
+            .thenReturn(response);
 
         var ctx = mockContext(request);
         when(ctx.pathParam("skuId")).thenReturn(skuId);
@@ -120,10 +128,14 @@ class AdjustCostHandlerTest {
     void testReturnsCorrectTransactionTimestamp() throws Exception {
         var expectedTimestamp = Instant.parse("2026-01-15T10:30:00Z");
         var request = new CostAdjustmentRequest(5, BigDecimal.valueOf(1.00), "TEST");
-        var repositoryResponse = new InsertTransactionResponse(
-            7L, expectedTimestamp, BigDecimal.valueOf(1.00), BigDecimal.valueOf(5.00)
+        var response = new InsertTransactionResponse(
+            7L,
+            expectedTimestamp,
+            BigDecimal.valueOf(1.00),
+            BigDecimal.valueOf(5.00)
         );
-        when(repository.insertTransaction(any())).thenReturn(repositoryResponse);
+        when(repository.insertTransaction(any()))
+            .thenReturn(response);
 
         var ctx = mockContext(request);
         when(ctx.pathParam("skuId")).thenReturn(skuId);
@@ -141,10 +153,14 @@ class AdjustCostHandlerTest {
             new BigDecimal("99.9999"),
             "REPRICE"
         );
-        var repositoryResponse = new InsertTransactionResponse(
-            11L, Instant.now(), new BigDecimal("99.9999"), new BigDecimal("1000.00")
+        var response = new InsertTransactionResponse(
+            11L,
+            Instant.now(),
+            new BigDecimal("99.9999"),
+            new BigDecimal("1000.00")
         );
-        when(repository.insertTransaction(any())).thenReturn(repositoryResponse);
+        when(repository.insertTransaction(any()))
+            .thenReturn(response);
 
         var ctx = mockContext(request);
         when(ctx.pathParam("skuId")).thenReturn(skuId);

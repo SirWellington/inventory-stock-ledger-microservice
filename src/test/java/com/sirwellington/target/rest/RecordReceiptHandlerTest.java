@@ -3,28 +3,23 @@ package com.sirwellington.target.rest;
 import java.math.BigDecimal;
 import java.time.Instant;
 
+import com.sirwellington.target.db.InventoryRepository;
 import com.sirwellington.target.db.InventoryRepository.InsertTransactionResponse;
+import com.sirwellington.target.model.EventPayload;
+import com.sirwellington.target.producer.EventPublisher;
 import com.sirwellington.target.rest.RecordReceiptHandler.RecordReceiptRequest;
+import com.sirwellington.target.rest.RecordReceiptHandler.RecordReceiptResponse;
+import io.javalin.http.Context;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-
-import com.sirwellington.target.db.InventoryRepository;
-import com.sirwellington.target.model.EventPayload;
-import com.sirwellington.target.model.TransactionType;
-import com.sirwellington.target.producer.EventPublisher;
-
-import io.javalin.http.Context;
 import tech.sirwellington.alchemy.test.AlchemyTest;
-import tech.sirwellington.alchemy.test.ThrowableAssertion;
 import tech.sirwellington.alchemy.test.generation.GenerateString;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.*;
 import static tech.sirwellington.alchemy.test.ThrowableAssertion.assertThrows;
 
 @AlchemyTest
@@ -56,11 +51,14 @@ class RecordReceiptHandlerTest {
             BigDecimal.valueOf(5.50)
         );
         var now = Instant.now();
-        var repositoryResponse = new InsertTransactionResponse(
-            42L, now, BigDecimal.valueOf(5.50), BigDecimal.valueOf(550.00)
+        var response = new InsertTransactionResponse(
+            42L,
+            now,
+            BigDecimal.valueOf(5.50),
+            BigDecimal.valueOf(550.00)
         );
         when(repository.insertTransaction(any()))
-            .thenReturn(repositoryResponse);
+            .thenReturn(response);
 
         var ctx = mockContextWithBody(request);
 
@@ -85,11 +83,14 @@ class RecordReceiptHandlerTest {
             50,
             BigDecimal.valueOf(12.75)
         );
-        var repositoryResponse = new InsertTransactionResponse(
-            1L, Instant.now(), BigDecimal.valueOf(12.75), BigDecimal.valueOf(637.50)
+        var response = new InsertTransactionResponse(
+            1L,
+            Instant.now(),
+            BigDecimal.valueOf(12.75),
+            BigDecimal.valueOf(637.50)
         );
         when(repository.insertTransaction(any()))
-            .thenReturn(repositoryResponse);
+            .thenReturn(response);
 
         var ctx = mockContextWithBody(request);
         var handler = createHandler();
@@ -102,11 +103,14 @@ class RecordReceiptHandlerTest {
     void testRecordsReceiptWithDecimalUnitCost() throws Exception {
         var cost = new BigDecimal("99.9999");
         var request = new RecordReceiptRequest(skuId, 10, cost);
-        var repositoryResponse = new InsertTransactionResponse(
-            5L, Instant.now(), cost, new BigDecimal("1000.00")
+        var response = new InsertTransactionResponse(
+            5L,
+            Instant.now(),
+            cost,
+            new BigDecimal("1000.00")
         );
         when(repository.insertTransaction(any()))
-            .thenReturn(repositoryResponse);
+            .thenReturn(response);
 
         var ctx = mockContextWithBody(request);
         var handler = createHandler();
@@ -114,16 +118,20 @@ class RecordReceiptHandlerTest {
 
         verify(ctx).status(201);
 
-        var captor = ArgumentCaptor.forClass(RecordReceiptHandler.RecordReceiptResponse.class);
+        var captor = ArgumentCaptor.forClass(RecordReceiptResponse.class);
         verify(ctx).json(captor.capture());
-        assertThat(captor.getValue().unitCost()).isEqualByComparingTo(cost);
-        assertThat(captor.getValue().totalAmountImpact()).isEqualByComparingTo(new BigDecimal("1000.00"));
+        assertThat(captor.getValue().unitCost())
+            .isEqualByComparingTo(cost);
+        assertThat(captor.getValue().totalAmountImpact())
+            .isEqualByComparingTo(new BigDecimal("1000.00"));
     }
 
     Context mockContextWithBody(Object body) {
         var ctx = mock(Context.class);
         when(ctx.bodyAsClass(any())).thenReturn(body);
-        lenient().when(ctx.status(org.mockito.ArgumentMatchers.anyInt())).thenReturn(ctx);
+        lenient()
+            .when(ctx.status(anyInt()))
+            .thenReturn(ctx);
         return ctx;
     }
 }

@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
 import com.sirwellington.target.db.InventoryRepository.GetLedgerHistoryQuery;
+import com.sirwellington.target.db.InventoryRepository.InsertTransactionRequest;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -64,7 +65,7 @@ class InventoryRepositoryTest {
 
     @Test
     void testInsertTransactionReturnsGeneratedIdAndTimestamp() {
-        var request = new InventoryRepository.InsertTransactionRequest(
+        var request = new InsertTransactionRequest(
             TransactionType.RECEIPT,
             "SKU-001",
             100,
@@ -79,14 +80,14 @@ class InventoryRepositoryTest {
 
     @Test
     void testInsertMultipleTransactionsReturnsUniqueIds() {
-        var id1 = repository.insertTransaction(new InventoryRepository.InsertTransactionRequest(
+        var id1 = repository.insertTransaction(new InsertTransactionRequest(
             TransactionType.RECEIPT,
             "SKU-A",
             50,
             BigDecimal.valueOf(10.00)
         )).transactionId();
 
-        var id2 = repository.insertTransaction(new InventoryRepository.InsertTransactionRequest(
+        var id2 = repository.insertTransaction(new InsertTransactionRequest(
             TransactionType.SALE,
             "SKU-B",
             -10,
@@ -98,7 +99,7 @@ class InventoryRepositoryTest {
 
     @Test
     void testInsertReceiptTransaction() {
-        var response = repository.insertTransaction(new InventoryRepository.InsertTransactionRequest(
+        var response = repository.insertTransaction(new InsertTransactionRequest(
             TransactionType.RECEIPT,
             "SKU-REC",
             200,
@@ -111,7 +112,7 @@ class InventoryRepositoryTest {
 
     @Test
     void testInsertAdjustmentTransaction() {
-        var response = repository.insertTransaction(new InventoryRepository.InsertTransactionRequest(
+        var response = repository.insertTransaction(new InsertTransactionRequest(
             TransactionType.ADJUSTMENT,
             "SKU-ADJ",
             -25,
@@ -123,7 +124,7 @@ class InventoryRepositoryTest {
 
     @Test
     void testInsertSaleTransaction() {
-        var response = repository.insertTransaction(new InventoryRepository.InsertTransactionRequest(
+        var response = repository.insertTransaction(new InsertTransactionRequest(
             TransactionType.SALE,
             "SKU-SALE",
             -5,
@@ -224,7 +225,7 @@ class InventoryRepositoryTest {
 
     @Test
     void testTransactionRecordContainsCorrectFields() throws Exception {
-        var response = repository.insertTransaction(new InventoryRepository.InsertTransactionRequest(
+        var response = repository.insertTransaction(new InsertTransactionRequest(
             TransactionType.RECEIPT, "SKU-FIELD", 30, BigDecimal.valueOf(7.25)
         ));
 
@@ -246,7 +247,7 @@ class InventoryRepositoryTest {
 
     @Test
     void testInsertTransactionWithDecimalUnitCost() {
-        var response = repository.insertTransaction(new InventoryRepository.InsertTransactionRequest(
+        var response = repository.insertTransaction(new InsertTransactionRequest(
             TransactionType.RECEIPT, "SKU-DEC", 15, new BigDecimal("42.8765")
         ));
 
@@ -255,42 +256,61 @@ class InventoryRepositoryTest {
 
     @Test
     void testInsertTransactionReturnsDatabaseGeneratedTotal() {
-        var response = repository.insertTransaction(new InventoryRepository.InsertTransactionRequest(
-            TransactionType.RECEIPT, "SKU-RND", 10, new BigDecimal("99.9999")
-        ));
+        var request = new InsertTransactionRequest(
+            TransactionType.RECEIPT,
+            "SKU-RND",
+            10,
+            new BigDecimal("99.9999")
+        );
+        var response = repository.insertTransaction(request);
 
-        assertThat(response.unitCost()).isEqualByComparingTo(new BigDecimal("99.9999"));
-        assertThat(response.totalAmountImpact()).isEqualByComparingTo(new BigDecimal("1000.00"));
+        assertThat(response.unitCost())
+            .isEqualByComparingTo(new BigDecimal("99.9999"));
+        assertThat(response.totalAmountImpact())
+            .isEqualByComparingTo(new BigDecimal("1000.00"));
     }
 
     @Test
     void testInsertTransactionRoundsGeneratedTotalToTwoDecimals() {
-        var response = repository.insertTransaction(new InventoryRepository.InsertTransactionRequest(
-            TransactionType.RECEIPT, "SKU-RND2", 15, new BigDecimal("42.8765")
-        ));
-
-        assertThat(response.totalAmountImpact()).isEqualByComparingTo(new BigDecimal("643.15"));
+        var request = new InsertTransactionRequest(
+            TransactionType.RECEIPT,
+            "SKU-RND2",
+            15,
+            new BigDecimal("42.8765")
+        );
+        var response = repository.insertTransaction(request);
+        assertThat(response.totalAmountImpact())
+            .isEqualByComparingTo(new BigDecimal("643.15"));
     }
 
     @Test
     void testInsertTransactionRoundsUnitCostToFourDecimals() {
-        var response = repository.insertTransaction(new InventoryRepository.InsertTransactionRequest(
-            TransactionType.RECEIPT, "SKU-RND3", 100, new BigDecimal("1.23456")
-        ));
+        var request = new InsertTransactionRequest(
+            TransactionType.RECEIPT,
+            "SKU-RND3",
+            100,
+            new BigDecimal("1.23456")
+        );
+        var response = repository.insertTransaction(request);
 
-        assertThat(response.unitCost()).isEqualByComparingTo(new BigDecimal("1.2346"));
-        assertThat(response.totalAmountImpact()).isEqualByComparingTo(new BigDecimal("123.46"));
+        assertThat(response.unitCost())
+            .isEqualByComparingTo(new BigDecimal("1.2346"));
+        assertThat(response.totalAmountImpact())
+            .isEqualByComparingTo(new BigDecimal("123.46"));
     }
 
     @Test
     void testGetInventoryValueWithDecimalPrecision() throws Exception {
         try (var stmt = connection.createStatement()) {
             stmt.execute(
-                "INSERT INTO sku_inventory_snapshots (sku_id, current_quantity, total_current_value) VALUES ('SKU-PREC', 1234, 56789.01)"
+                "INSERT INTO sku_inventory_snapshots (sku_id, current_quantity, total_current_value) " +
+                "VALUES ('SKU-PREC', 1234, 56789.01)"
             );
         }
 
-        var result = repository.getInventoryValue(new InventoryRepository.GetInventoryValueRequest("SKU-PREC"));
+        var result = repository.getInventoryValue(
+            new InventoryRepository.GetInventoryValueRequest("SKU-PREC")
+        );
 
         assertThat(result).isPresent();
     }
@@ -298,7 +318,10 @@ class InventoryRepositoryTest {
     @Test
     void testEmptyLedgerHistoryResponseIsNotNull() {
         var future = one(futureInstants());
-        var repositoryResponse = new GetLedgerHistoryQuery(future, future.plus(1, DAYS));
+        var repositoryResponse = new GetLedgerHistoryQuery(
+            future,
+            future.plus(1, DAYS)
+        );
         var result = repository.getLedgerHistory(repositoryResponse);
 
         assertThat(result).isNotNull();
