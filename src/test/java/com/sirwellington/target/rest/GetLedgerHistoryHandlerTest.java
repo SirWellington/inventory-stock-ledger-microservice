@@ -8,11 +8,14 @@ import java.util.List;
 import com.sirwellington.target.db.InventoryRepository;
 import com.sirwellington.target.db.InventoryRepository.GetLedgerHistoryResponse;
 import com.sirwellington.target.db.InventoryRepository.TransactionRecord;
+import com.sirwellington.target.rest.GetLedgerHistoryHandler.GetLedgerHistoryResponse.LedgerEntry;
 import io.javalin.http.Context;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import tech.sirwellington.alchemy.test.AlchemyTest;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
@@ -48,7 +51,11 @@ class GetLedgerHistoryHandlerTest {
         var handler = createHandler();
         handler.handle(ctx);
 
-        verify(ctx).json(eq(repositoryResponse));
+        var response = captureJsonResponse(ctx);
+        var entries = response.entries();
+        assertThat(entries).hasSize(1);
+
+        assertEntryMatchesRecord(entries.getFirst(), record);
     }
 
     @Test
@@ -94,7 +101,13 @@ class GetLedgerHistoryHandlerTest {
         var handler = createHandler();
         handler.handle(ctx);
 
-        verify(ctx).json(eq(repositoryResponse));
+        var response = captureJsonResponse(ctx);
+        var entries = response.entries();
+        assertThat(entries).hasSize(records.size());
+
+        for (var i = 0; i < records.size(); i++) {
+            assertEntryMatchesRecord(entries.get(i), records.get(i));
+        }
     }
 
     @Test
@@ -110,7 +123,8 @@ class GetLedgerHistoryHandlerTest {
         var handler = createHandler();
         handler.handle(ctx);
 
-        verify(ctx).json(eq(repositoryResponse));
+        var response = captureJsonResponse(ctx);
+        assertThat(response.entries()).isEmpty();
     }
 
     @Test
@@ -162,7 +176,30 @@ class GetLedgerHistoryHandlerTest {
         var handler = createHandler();
         handler.handle(ctx);
 
-        verify(ctx).json(eq(repositoryResponse));
+        var response = captureJsonResponse(ctx);
+        var entries = response.entries();
+        assertThat(entries).hasSize(1);
+
+        assertEntryMatchesRecord(entries.getFirst(), record);
+    }
+
+    void assertEntryMatchesRecord(
+        LedgerEntry entry,
+        TransactionRecord record
+    ) {
+        assertThat(entry.transactionId()).isEqualTo(record.transactionId());
+        assertThat(entry.transactionTimestamp()).isEqualTo(record.transactionTimestamp());
+        assertThat(entry.skuId()).isEqualTo(record.skuId());
+        assertThat(entry.transactionType()).isEqualTo(record.transactionType());
+        assertThat(entry.quantityChange()).isEqualTo(record.quantityChange());
+        assertThat(entry.unitCost()).isEqualByComparingTo(record.unitCost());
+        assertThat(entry.totalAmountImpact()).isEqualByComparingTo(record.totalAmountImpact());
+    }
+
+    GetLedgerHistoryHandler.GetLedgerHistoryResponse captureJsonResponse(Context ctx) {
+        var captor = ArgumentCaptor.forClass(GetLedgerHistoryHandler.GetLedgerHistoryResponse.class);
+        verify(ctx).json(captor.capture());
+        return captor.getValue();
     }
 
     Context mockContext(String startDate, String endDate) {
