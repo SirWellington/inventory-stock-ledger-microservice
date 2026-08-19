@@ -8,6 +8,7 @@ import com.sirwellington.target.db.InventoryRepository.InsertTransactionResponse
 import com.sirwellington.target.model.EventPayload;
 import com.sirwellington.target.producer.EventPublisher;
 import com.sirwellington.target.rest.AdjustCostHandler.CostAdjustmentRequest;
+import com.sirwellington.target.rest.AdjustCostHandler.CostAdjustmentResponse;
 import io.javalin.http.Context;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -51,7 +52,9 @@ class AdjustCostHandlerTest {
             BigDecimal.valueOf(8.00),
             "REPRICE"
         );
-        var repositoryResponse = new InsertTransactionResponse(10L, Instant.now());
+        var repositoryResponse = new InsertTransactionResponse(
+            10L, Instant.now(), BigDecimal.valueOf(8.00), BigDecimal.valueOf(200.00)
+        );
         when(repository.insertTransaction(any()))
             .thenReturn(repositoryResponse);
 
@@ -66,6 +69,7 @@ class AdjustCostHandlerTest {
         assertThat(captor.getValue().transactionId()).isEqualTo(10L);
         assertThat(captor.getValue().type()).isEqualTo("ADJUSTMENT");
         assertThat(captor.getValue().quantityChange()).isEqualTo(25);
+        assertThat(captor.getValue().unitCost()).isEqualByComparingTo(BigDecimal.valueOf(8.00));
 
         verify(ctx).status(201);
     }
@@ -78,7 +82,9 @@ class AdjustCostHandlerTest {
             "DAMAGED"
         );
         when(repository.insertTransaction(any()))
-            .thenReturn(new InsertTransactionResponse(2L, Instant.now()));
+            .thenReturn(new InsertTransactionResponse(
+                2L, Instant.now(), BigDecimal.valueOf(3.50), BigDecimal.valueOf(-52.50)
+            ));
 
         var ctx = mockContext(request);
         when(ctx.pathParam("skuId")).thenReturn(skuId);
@@ -96,7 +102,9 @@ class AdjustCostHandlerTest {
             BigDecimal.valueOf(2.50),
             "WRITEOFF"
         );
-        var repositoryResponse = new InsertTransactionResponse(3L, Instant.now());
+        var repositoryResponse = new InsertTransactionResponse(
+            3L, Instant.now(), BigDecimal.valueOf(2.50), BigDecimal.valueOf(-25.00)
+        );
         when(repository.insertTransaction(any())).thenReturn(repositoryResponse);
 
         var ctx = mockContext(request);
@@ -112,7 +120,9 @@ class AdjustCostHandlerTest {
     void testReturnsCorrectTransactionTimestamp() throws Exception {
         var expectedTimestamp = Instant.parse("2026-01-15T10:30:00Z");
         var request = new CostAdjustmentRequest(5, BigDecimal.valueOf(1.00), "TEST");
-        var repositoryResponse = new InsertTransactionResponse(7L, expectedTimestamp);
+        var repositoryResponse = new InsertTransactionResponse(
+            7L, expectedTimestamp, BigDecimal.valueOf(1.00), BigDecimal.valueOf(5.00)
+        );
         when(repository.insertTransaction(any())).thenReturn(repositoryResponse);
 
         var ctx = mockContext(request);
@@ -122,6 +132,30 @@ class AdjustCostHandlerTest {
         handler.handle(ctx);
 
         verify(publisher).publish(any(EventPayload.class));
+    }
+
+    @Test
+    void testReturnsDatabaseComputedValuesInResponse() throws Exception {
+        var request = new CostAdjustmentRequest(
+            10,
+            new BigDecimal("99.9999"),
+            "REPRICE"
+        );
+        var repositoryResponse = new InsertTransactionResponse(
+            11L, Instant.now(), new BigDecimal("99.9999"), new BigDecimal("1000.00")
+        );
+        when(repository.insertTransaction(any())).thenReturn(repositoryResponse);
+
+        var ctx = mockContext(request);
+        when(ctx.pathParam("skuId")).thenReturn(skuId);
+
+        var handler = createHandler();
+        handler.handle(ctx);
+
+        var captor = ArgumentCaptor.forClass(CostAdjustmentResponse.class);
+        verify(ctx).json(captor.capture());
+        assertThat(captor.getValue().unitCost()).isEqualByComparingTo(new BigDecimal("99.9999"));
+        assertThat(captor.getValue().totalAmountImpact()).isEqualByComparingTo(new BigDecimal("1000.00"));
     }
 
     private Context mockContext(Object body) {

@@ -14,6 +14,8 @@ import org.junit.jupiter.api.Test;
 
 import com.sirwellington.target.model.TransactionType;
 import io.zonky.test.db.postgres.embedded.EmbeddedPostgres;
+import org.jooq.SQLDialect;
+import org.jooq.impl.DSL;
 import tech.sirwellington.alchemy.generator.DateGenerators;
 import tech.sirwellington.alchemy.generator.TimeGenerators;
 
@@ -43,7 +45,7 @@ class InventoryRepositoryTest {
     void setUp() throws Exception {
         connection = dataSource.getConnection();
         TestDbUtils.truncateAll(connection);
-        repository = new InventoryRepository(dataSource);
+        repository = new InventoryRepository(DSL.using(dataSource, SQLDialect.POSTGRES));
     }
 
     @AfterEach
@@ -249,6 +251,35 @@ class InventoryRepositoryTest {
         ));
 
         assertThat(response.transactionId()).isGreaterThan(0);
+    }
+
+    @Test
+    void testInsertTransactionReturnsDatabaseGeneratedTotal() {
+        var response = repository.insertTransaction(new InventoryRepository.InsertTransactionRequest(
+            TransactionType.RECEIPT, "SKU-RND", 10, new BigDecimal("99.9999")
+        ));
+
+        assertThat(response.unitCost()).isEqualByComparingTo(new BigDecimal("99.9999"));
+        assertThat(response.totalAmountImpact()).isEqualByComparingTo(new BigDecimal("1000.00"));
+    }
+
+    @Test
+    void testInsertTransactionRoundsGeneratedTotalToTwoDecimals() {
+        var response = repository.insertTransaction(new InventoryRepository.InsertTransactionRequest(
+            TransactionType.RECEIPT, "SKU-RND2", 15, new BigDecimal("42.8765")
+        ));
+
+        assertThat(response.totalAmountImpact()).isEqualByComparingTo(new BigDecimal("643.15"));
+    }
+
+    @Test
+    void testInsertTransactionRoundsUnitCostToFourDecimals() {
+        var response = repository.insertTransaction(new InventoryRepository.InsertTransactionRequest(
+            TransactionType.RECEIPT, "SKU-RND3", 100, new BigDecimal("1.23456")
+        ));
+
+        assertThat(response.unitCost()).isEqualByComparingTo(new BigDecimal("1.2346"));
+        assertThat(response.totalAmountImpact()).isEqualByComparingTo(new BigDecimal("123.46"));
     }
 
     @Test

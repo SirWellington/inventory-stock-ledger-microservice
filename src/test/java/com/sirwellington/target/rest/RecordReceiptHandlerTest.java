@@ -56,7 +56,9 @@ class RecordReceiptHandlerTest {
             BigDecimal.valueOf(5.50)
         );
         var now = Instant.now();
-        var repositoryResponse = new InsertTransactionResponse(42L, now);
+        var repositoryResponse = new InsertTransactionResponse(
+            42L, now, BigDecimal.valueOf(5.50), BigDecimal.valueOf(550.00)
+        );
         when(repository.insertTransaction(any()))
             .thenReturn(repositoryResponse);
 
@@ -71,6 +73,7 @@ class RecordReceiptHandlerTest {
         assertThat(captor.getValue().type()).isEqualTo("RECEIPT");
         assertThat(captor.getValue().skuId()).isEqualTo(skuId);
         assertThat(captor.getValue().quantityChange()).isEqualTo(100);
+        assertThat(captor.getValue().unitCost()).isEqualByComparingTo(BigDecimal.valueOf(5.50));
 
         verify(ctx).status(201);
     }
@@ -82,7 +85,9 @@ class RecordReceiptHandlerTest {
             50,
             BigDecimal.valueOf(12.75)
         );
-        var repositoryResponse = new InsertTransactionResponse(1L, Instant.now());
+        var repositoryResponse = new InsertTransactionResponse(
+            1L, Instant.now(), BigDecimal.valueOf(12.75), BigDecimal.valueOf(637.50)
+        );
         when(repository.insertTransaction(any()))
             .thenReturn(repositoryResponse);
 
@@ -97,7 +102,9 @@ class RecordReceiptHandlerTest {
     void testRecordsReceiptWithDecimalUnitCost() throws Exception {
         var cost = new BigDecimal("99.9999");
         var request = new RecordReceiptRequest(skuId, 10, cost);
-        var repositoryResponse = new InsertTransactionResponse(5L, Instant.now());
+        var repositoryResponse = new InsertTransactionResponse(
+            5L, Instant.now(), cost, new BigDecimal("1000.00")
+        );
         when(repository.insertTransaction(any()))
             .thenReturn(repositoryResponse);
 
@@ -106,6 +113,11 @@ class RecordReceiptHandlerTest {
         handler.handle(ctx);
 
         verify(ctx).status(201);
+
+        var captor = ArgumentCaptor.forClass(RecordReceiptHandler.RecordReceiptResponse.class);
+        verify(ctx).json(captor.capture());
+        assertThat(captor.getValue().unitCost()).isEqualByComparingTo(cost);
+        assertThat(captor.getValue().totalAmountImpact()).isEqualByComparingTo(new BigDecimal("1000.00"));
     }
 
     Context mockContextWithBody(Object body) {
