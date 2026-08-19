@@ -1,26 +1,21 @@
 package com.sirwellington.target;
 
-import java.sql.Connection;
 import java.util.Objects;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.sql.DataSource;
-import javax.xml.crypto.Data;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
 import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.sirwellington.target.db.InventoryRepository;
 import com.sirwellington.target.producer.EventPublisher;
 import com.sirwellington.target.producer.KafkaProducerConfig;
-import com.sirwellington.target.rest.AdjustCostHandler;
-import com.sirwellington.target.rest.GetCurrentValueHandler;
-import com.sirwellington.target.rest.GetHealthHandler;
-import com.sirwellington.target.rest.GetLedgerHistoryHandler;
-import com.sirwellington.target.rest.RecordReceiptHandler;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.producer.KafkaProducer;
+import org.jooq.DSLContext;
+import org.jooq.SQLDialect;
+import org.jooq.impl.DSL;
 import tech.sirwellington.alchemy.annotations.arguments.Required;
 
 public class TargetModule extends AbstractModule {
@@ -33,6 +28,14 @@ public class TargetModule extends AbstractModule {
         this.dataSource = dataSource;
     }
 
+    @Override
+    protected void configure() {
+        super.configure();
+        bind(InventoryRepository.class).in(Singleton.class);
+        bind(KafkaProducer.class).toInstance(KafkaProducerConfig.create());
+        bind(DataSource.class).toInstance(dataSource);
+    }
+
     @Provides
     @Singleton
     ObjectMapper provideJsonMapper() {
@@ -42,25 +45,16 @@ public class TargetModule extends AbstractModule {
     }
 
     @Provides
-    DataSource provideDataSource() {
-        return dataSource;
+    DSLContext provideJooqDsl(DataSource dataSource) {
+        return DSL.using(dataSource, SQLDialect.POSTGRES);
     }
 
     @Provides
     @Singleton
-    InventoryRepository provideInventoryRepository(DataSource connection) {
-        return new InventoryRepository(dataSource);
-    }
-
-    @Provides
-    @Singleton
-    KafkaProducer<String, String> provideKafkaProducer() {
-        return KafkaProducerConfig.create();
-    }
-
-    @Provides
-    @Singleton
-    EventPublisher provideEventPublisher(KafkaProducer<String, String> producer, ObjectMapper objectMapper) {
+    EventPublisher provideEventPublisher(
+        KafkaProducer<String, String> producer,
+        ObjectMapper objectMapper
+    ) {
         return new EventPublisher(producer, objectMapper);
     }
 
