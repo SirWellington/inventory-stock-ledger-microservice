@@ -43,7 +43,7 @@ class InventoryRepositoryTest {
     void setUp() throws Exception {
         connection = dataSource.getConnection();
         TestDbUtils.truncateAll(connection);
-        repository = new InventoryRepository(connection);
+        repository = new InventoryRepository(dataSource);
     }
 
     @AfterEach
