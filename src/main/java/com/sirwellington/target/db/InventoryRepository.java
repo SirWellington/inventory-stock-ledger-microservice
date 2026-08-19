@@ -112,12 +112,10 @@ public class InventoryRepository {
 
     private static final Logger LOG = LoggerFactory.getLogger(InventoryRepository.class);
 
-    private final DataSource dataSource;
     private final DSLContext dsl;
 
-    public InventoryRepository(DataSource dataSource) {
-        this.dataSource = Objects.requireNonNull(dataSource);
-        this.dsl = DSL.using(dataSource, SQLDialect.POSTGRES);
+    public InventoryRepository(DSLContext dsl) {
+        this.dsl = Objects.requireNonNull(dsl);
     }
 
     public InsertTransactionResponse insertTransaction(InsertTransactionRequest request) {
