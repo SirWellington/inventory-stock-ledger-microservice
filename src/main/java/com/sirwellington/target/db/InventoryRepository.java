@@ -33,7 +33,9 @@ public class InventoryRepository {
 
     public record InsertTransactionResponse(
         long transactionId,
-        Instant transactionTimestamp
+        Instant transactionTimestamp,
+        BigDecimal unitCost,
+        BigDecimal totalAmountImpact
     ) {}
 
     public record GetInventoryValueRequest(
@@ -122,7 +124,7 @@ public class InventoryRepository {
         var now = Instant.now();
 
         try {
-            var txnId = dsl.insertInto(
+            var record = dsl.insertInto(
                 INVENTORY_TRANSACTIONS,
                 SKU_ID,
                 TRANSACTION_TYPE,
@@ -135,10 +137,15 @@ public class InventoryRepository {
                 request.quantityChange,
                 request.unitCost,
                 now
-            ).returning(TRANSACTION_ID)
-             .fetchOne(TRANSACTION_ID);
+            ).returning(TRANSACTION_ID, UNIT_COST, TOTAL_AMOUNT_IMPACT)
+             .fetchOne();
 
-            return new InsertTransactionResponse(txnId, now);
+            return new InsertTransactionResponse(
+                record.get(TRANSACTION_ID),
+                now,
+                record.get(UNIT_COST),
+                record.get(TOTAL_AMOUNT_IMPACT)
+            );
         } catch (Exception ex) {
             var message = "Failed to insert transaction into 'inventory_transactions'";
             LOG.error(message, ex);
