@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import com.sirwellington.target.db.InventoryRepository.GetInventoryValueResponse;
+import com.sirwellington.target.rest.GetCurrentValueHandler.CurrentValueResponse;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
@@ -15,6 +16,7 @@ import tech.sirwellington.alchemy.test.AlchemyTest;
 import tech.sirwellington.alchemy.test.generation.GenerateString;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -32,8 +34,12 @@ class GetCurrentValueHandlerTest {
 
     @Test
     void testReturnsCurrentValueWhenSkuExists() throws Exception {
-        var expectedValue = new GetInventoryValueResponse(250, new BigDecimal("12500.00"));
-        when(repository.getInventoryValue(any())).thenReturn(Optional.of(expectedValue));
+        var expectedValue = new GetInventoryValueResponse(
+            250,
+            new BigDecimal("12500.00")
+        );
+        when(repository.getInventoryValue(any()))
+            .thenReturn(Optional.of(expectedValue));
 
         var ctx = mock(Context.class);
         when(ctx.pathParam("skuId")).thenReturn(skuId);
@@ -41,13 +47,18 @@ class GetCurrentValueHandlerTest {
         var handler = createHandler();
         handler.handle(ctx);
 
-        verify(ctx).json(new GetCurrentValueHandler.CurrentValueResponse(skuId, 250, new BigDecimal("12500.00")));
+        verify(ctx).json(new CurrentValueResponse(
+            skuId,
+            250,
+            new BigDecimal("12500.00")
+        ));
     }
 
     @Test
     void testReturnsZeroQuantityWhenInStockButEmpty() throws Exception {
         var zeroValue = new GetInventoryValueResponse(0, BigDecimal.ZERO);
-        when(repository.getInventoryValue(any())).thenReturn(Optional.of(zeroValue));
+        when(repository.getInventoryValue(any()))
+            .thenReturn(Optional.of(zeroValue));
 
         Context ctx = mock(Context.class);
         when(ctx.pathParam("skuId")).thenReturn(skuId);
@@ -55,16 +66,23 @@ class GetCurrentValueHandlerTest {
         var handler = createHandler();
         handler.handle(ctx);
 
-        verify(ctx).json(new GetCurrentValueHandler.CurrentValueResponse(skuId, 0, BigDecimal.ZERO));
+        verify(ctx).json(new CurrentValueResponse(
+            skuId,
+            0,
+            BigDecimal.ZERO
+        ));
     }
 
     @Test
     void testReturns404WhenSkuNotFound() throws Exception {
-        when(repository.getInventoryValue(any())).thenReturn(Optional.empty());
+        when(repository.getInventoryValue(any()))
+            .thenReturn(Optional.empty());
 
-        Context ctx = mock(Context.class);
+        var ctx = mock(Context.class);
         when(ctx.pathParam("skuId")).thenReturn(skuId);
-        lenient().when(ctx.status(org.mockito.ArgumentMatchers.anyInt())).thenReturn(ctx);
+        lenient()
+            .when(ctx.status(anyInt()))
+            .thenReturn(ctx);
 
         var handler = createHandler();
         handler.handle(ctx);
@@ -74,11 +92,14 @@ class GetCurrentValueHandlerTest {
 
     @Test
     void testReturnsErrorDetailOnNotFound() throws Exception {
-        when(repository.getInventoryValue(any())).thenReturn(Optional.empty());
+        when(repository.getInventoryValue(any()))
+            .thenReturn(Optional.empty());
 
-        Context ctx = mock(Context.class);
+        var ctx = mock(Context.class);
         when(ctx.pathParam("skuId")).thenReturn(skuId);
-        lenient().when(ctx.status(org.mockito.ArgumentMatchers.anyInt())).thenReturn(ctx);
+        lenient()
+            .when(ctx.status(anyInt()))
+            .thenReturn(ctx);
 
         var handler = createHandler();
         handler.handle(ctx);
@@ -88,15 +109,23 @@ class GetCurrentValueHandlerTest {
 
     @Test
     void testHandlesLargeInventoryValues() throws Exception {
-        var largeValue = new GetInventoryValueResponse(10000, new BigDecimal("999999.99"));
-        when(repository.getInventoryValue(any())).thenReturn(Optional.of(largeValue));
+        var largeValue = new GetInventoryValueResponse(
+            10000,
+            new BigDecimal("999999.99")
+        );
+        when(repository.getInventoryValue(any()))
+            .thenReturn(Optional.of(largeValue));
 
-        Context ctx = mock(Context.class);
+        var ctx = mock(Context.class);
         when(ctx.pathParam("skuId")).thenReturn(skuId);
 
         var handler = createHandler();
         handler.handle(ctx);
 
-        verify(ctx).json(new GetCurrentValueHandler.CurrentValueResponse(skuId, 10000, new BigDecimal("999999.99")));
+        verify(ctx).json(new CurrentValueResponse(
+            skuId,
+            10000,
+            new BigDecimal("999999.99")
+        ));
     }
 }
