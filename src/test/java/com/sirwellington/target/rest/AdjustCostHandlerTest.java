@@ -127,7 +127,11 @@ class AdjustCostHandlerTest {
     @Test
     void testReturnsCorrectTransactionTimestamp() throws Exception {
         var expectedTimestamp = Instant.parse("2026-01-15T10:30:00Z");
-        var request = new CostAdjustmentRequest(5, BigDecimal.valueOf(1.00), "TEST");
+        var request = new CostAdjustmentRequest(
+            5,
+            BigDecimal.valueOf(1.00),
+            "TEST"
+        );
         var response = new InsertTransactionResponse(
             7L,
             expectedTimestamp,
@@ -170,8 +174,10 @@ class AdjustCostHandlerTest {
 
         var captor = ArgumentCaptor.forClass(CostAdjustmentResponse.class);
         verify(ctx).json(captor.capture());
-        assertThat(captor.getValue().unitCost()).isEqualByComparingTo(new BigDecimal("99.9999"));
-        assertThat(captor.getValue().totalAmountImpact()).isEqualByComparingTo(new BigDecimal("1000.00"));
+        assertThat(captor.getValue().unitCost())
+            .isEqualByComparingTo(new BigDecimal("99.9999"));
+        assertThat(captor.getValue().totalAmountImpact())
+            .isEqualByComparingTo(new BigDecimal("1000.00"));
     }
 
     private Context mockContext(Object body) {
