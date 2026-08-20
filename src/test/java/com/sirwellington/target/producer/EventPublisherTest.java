@@ -3,22 +3,18 @@ package com.sirwellington.target.producer;
 import java.math.BigDecimal;
 import java.util.concurrent.CompletableFuture;
 
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.TopicPartition;
-import org.junit.jupiter.api.Test;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sirwellington.target.model.EventPayload;
-
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import tech.sirwellington.alchemy.test.AlchemyTest;
 import tech.sirwellington.alchemy.test.generation.GenerateString;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @AlchemyTest
 class EventPublisherTest {
@@ -42,7 +38,7 @@ class EventPublisherTest {
     }
 
     @Test
-    void testPublishesEventSuccessfully() throws Exception {
+    void testPublishesEventSuccessfully() {
         var payload = createPayload();
         when(producer.send(any(ProducerRecord.class)))
             .thenReturn(CompletableFuture.completedFuture(mockMetadata()));
@@ -54,8 +50,14 @@ class EventPublisherTest {
     }
 
     @Test
-    void testPublishesAdjustmentEvent() throws Exception {
-        var payload = new EventPayload(2L, "ADJUSTMENT", skuId, -10, BigDecimal.valueOf(5.50));
+    void testPublishesAdjustmentEvent() {
+        var payload = new EventPayload(
+            2L,
+            "ADJUSTMENT",
+            skuId,
+            -10,
+            BigDecimal.valueOf(5.50)
+        );
         when(producer.send(any(ProducerRecord.class)))
             .thenReturn(CompletableFuture.completedFuture(mockMetadata()));
 
@@ -66,8 +68,14 @@ class EventPublisherTest {
     }
 
     @Test
-    void testPublishesSaleEvent() throws Exception {
-        var payload = new EventPayload(3L, "SALE", skuId, -25, BigDecimal.valueOf(15.00));
+    void testPublishesSaleEvent() {
+        var payload = new EventPayload(
+            3L,
+            "SALE",
+            skuId,
+            -25,
+            BigDecimal.valueOf(15.00)
+        );
         when(producer.send(any(ProducerRecord.class)))
             .thenReturn(CompletableFuture.completedFuture(mockMetadata()));
 
@@ -87,21 +95,34 @@ class EventPublisherTest {
     }
 
     @Test
-    void testPublishesMultipleEventsSequentially() throws Exception {
+    void testPublishesMultipleEventsSequentially() {
         when(producer.send(any(ProducerRecord.class)))
             .thenReturn(CompletableFuture.completedFuture(mockMetadata()));
 
         var publisher = new EventPublisher(producer, objectMapper);
 
         publisher.publish(createPayload());
-        publisher.publish(new EventPayload(2L, "SALE", skuId + "-B", -5, BigDecimal.valueOf(20.00)));
+        publisher.publish(new EventPayload(
+            2L,
+            "SALE",
+            skuId + "-B",
+            -5,
+            BigDecimal.valueOf(20.00)
+        ));
 
-        verify(producer, org.mockito.Mockito.times(2)).send(any(ProducerRecord.class));
+        verify(producer, times(2))
+            .send(any(ProducerRecord.class));
     }
 
     @Test
-    void testPublishesEventWithZeroQuantity() throws Exception {
-        var payload = new EventPayload(4L, "ADJUSTMENT", skuId, 0, BigDecimal.ZERO);
+    void testPublishesEventWithZeroQuantity() {
+        var payload = new EventPayload(
+            4L,
+            "ADJUSTMENT",
+            skuId,
+            0,
+            BigDecimal.ZERO
+        );
         when(producer.send(any(ProducerRecord.class)))
             .thenReturn(CompletableFuture.completedFuture(mockMetadata()));
 
@@ -112,8 +133,14 @@ class EventPublisherTest {
     }
 
     @Test
-    void testPublishesEventWithLargeValues() throws Exception {
-        var payload = new EventPayload(Long.MAX_VALUE, "RECEIPT", skuId, Integer.MAX_VALUE, new BigDecimal("999999.99"));
+    void testPublishesEventWithLargeValues() {
+        var payload = new EventPayload(
+            Long.MAX_VALUE,
+            "RECEIPT",
+            skuId,
+            Integer.MAX_VALUE,
+            new BigDecimal("999999.99")
+        );
         when(producer.send(any(ProducerRecord.class)))
             .thenReturn(CompletableFuture.completedFuture(mockMetadata()));
 
@@ -123,7 +150,7 @@ class EventPublisherTest {
         verify(producer).send(any(ProducerRecord.class));
     }
 
-    private org.apache.kafka.clients.producer.RecordMetadata mockMetadata() {
-        return mock(org.apache.kafka.clients.producer.RecordMetadata.class);
+    private RecordMetadata mockMetadata() {
+        return mock(RecordMetadata.class);
     }
 }
